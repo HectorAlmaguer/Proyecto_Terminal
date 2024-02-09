@@ -22,11 +22,9 @@ function register() {
   const user_field = document.querySelector("#user_register");
   const password_field = document.querySelector("#password_register");
   const email_field = document.querySelector("#email_register");
-  const image_field = document.querySelector("#profile_picture")
   const email = email_field.value;
   const password = password_field.value;
   const full_name = user_field.value;
-  const image = image_field.value;
   // Validate input fields
   if (validate_email(email) == false || validate_password(password) == false) {
     swal({
