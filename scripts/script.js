@@ -114,7 +114,7 @@ function login() {
 
       //Done
 
-      let pagina = "./pages/profile.html";
+      let pagina = "./pages/class.html";
       let segundos = 5;
       function redireccion() {
         window.location.href = pagina;
