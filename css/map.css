@@ -1,0 +1,14 @@
+#location-button{
+    background-color: blue;
+    color: azure;
+    align-items: center;
+}
+h1{
+	font-family: "Arial";
+	color: #2980b9;
+}
+
+#mapa {
+        width:  720px;
+        height: 500px;
+      }
