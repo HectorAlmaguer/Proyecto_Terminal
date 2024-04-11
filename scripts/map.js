@@ -15,8 +15,8 @@ const get_address = async (latitude, longitude) => {
 };
 
 function get_location() {
-  if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(function (position) {
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
       get_address(position.coords.latitude, position.coords.longitude);
       let map = L.map("map").setView(
         [position.coords.latitude, position.coords.longitude],
@@ -35,8 +35,15 @@ function get_location() {
         attribution:
           '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
       }).addTo(map);
-    });
-  }
+    },
+    (e) => {
+      swal({
+        icon: "error",
+        title: "Oops...",
+        text: "Debes permitir el acceso a la ubicación para mostrar información.",
+      });
+    }
+  );
 }
 
 btn_location.addEventListener("click", (event) => {
