@@ -1,5 +1,5 @@
 const btn_location = document.querySelector("#location-button");
-const location_data = document.querySelector("#mapa");
+const location_data = document.querySelector("#neighbourhood");
 
 const get_address = async (latitude, longitude) => {
   const response = await fetch(
@@ -10,9 +10,8 @@ const get_address = async (latitude, longitude) => {
       "&format=json"
   );
   const data = await response.json();
-  const element = document.createElement("h2");
+  const element = document.querySelector("#element");
   element.textContent = data.address.neighbourhood;
-  location_data.appendChild(element);
 };
 
 function get_location() {
@@ -21,10 +20,10 @@ function get_location() {
       get_address(position.coords.latitude, position.coords.longitude);
       let map = L.map("map").setView(
         [position.coords.latitude, position.coords.longitude],
-        13
+        16
       );
       let marker = L.marker([
-        position.coords.latitude - 0.01,
+        position.coords.latitude,
         position.coords.longitude,
       ]).addTo(map);
       let popup = L.popup()
