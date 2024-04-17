@@ -1,16 +1,19 @@
-#location-button{
-    background-color: blue;
-    color: azure;
-    align-items: center;
-}
-h1{
-	font-family: "Arial";
-	color: #2980b9;
+#location-button {
+  background-color: blue;
+  color: azure;
+  align-items: center;
 }
 
-#wrapper{
+h1 {
+  font-family: "Arial";
+  color: #2980b9;
+}
+
+#wrapper {
   display: flex;
   flex-direction: column;
 }
 
-#map { height: 500px; }
+#map {
+  height: 500px;
+}
