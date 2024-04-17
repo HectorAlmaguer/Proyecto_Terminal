@@ -17,3 +17,8 @@ h1 {
 #map {
   height: 500px;
 }
+
+[id ^= "map_crime"]{
+  width: 18rem;
+  height: 18rem;
+ }

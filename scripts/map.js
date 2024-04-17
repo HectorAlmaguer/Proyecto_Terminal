@@ -5,6 +5,19 @@ const btn_location = document.querySelector("#location-button");
 const location_data = document.querySelector("#neighbourhood");
 const table_crimes = document.querySelector("#table_crimes");
 
+function getMapID(lat,lon,mapid){
+  let map = L.map(mapid).setView([lat,lon],16);
+  L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution:
+          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      }).addTo(map);
+
+      L.marker([lat, lon])
+        .addTo(map)
+        .bindPopup(mapid)
+        .openPopup();
+}
+
 const get_address = async (latitude, longitude) => {
   const response = await fetch(
     "https://nominatim.openstreetmap.org/reverse?lat=" +
@@ -16,6 +29,7 @@ const get_address = async (latitude, longitude) => {
   const data = await response.json();
   const element = document.querySelector("#element");
   element.textContent = data.address.neighbourhood;
+  element.className = "text-center"
 };
 
 function get_location() {
@@ -47,7 +61,7 @@ function get_location() {
   );
 }
 
-const renderCrimes = (crime) => {
+const renderCrimes = (crime, index) => {
   const card_container = document.createElement("div");
   const map_crime = document.createElement("div");
   const img = document.createElement("img");
@@ -62,7 +76,8 @@ const renderCrimes = (crime) => {
   card_container.className = "card m-3";
   card_container.style = "width: 18rem";
   img.className = "card-img-top";
-  map_crime.setAttribute("id", "map_crime");
+  let mapid = `map_crime${index}`;
+  map_crime.setAttribute("id", mapid);
   card_body.className = "card-body";
   card_title.className = "card-title text-center";
   card_text.className = "card-text";
@@ -79,7 +94,7 @@ const renderCrimes = (crime) => {
 
   table_crimes.appendChild(card_container);
   card_container.appendChild(map_crime);
- 
+  getMapID(crime.latitud_delito, crime.longitud_delito, mapid);
   card_container.appendChild(card_body);
   card_body.appendChild(card_title);
   card_body.appendChild(card_text);
@@ -117,8 +132,8 @@ const parserResponseFireBase = (response) => {
 
 const renderList = (listToRender) => {
   console.log(listToRender);
-  listToRender.forEach((crime) => {
-    renderCrimes(crime);
+  listToRender.forEach((crime, index) => {
+    renderCrimes(crime, index);
   });
 };
 
