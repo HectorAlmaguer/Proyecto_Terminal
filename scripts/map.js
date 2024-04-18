@@ -12,7 +12,7 @@ function filter_data(lat,lon){
   for (let index = 0; index < crimesList.length; index++) {
     const difference_lat = Math.abs(crimesList[index].latitud_delito - lat_target);
     const difference_lon = Math.abs(crimesList[index].longitud_delito - lon_target);
-      if (difference_lat <= 0.00001 && difference_lat <= 0.00001) {
+      if (difference_lat <= 0.0001 && difference_lat <= 0.0001) {
         filterList.push(crimesList[index]);
       }
   }
@@ -26,7 +26,7 @@ function getMapID(lat, lon, mapid) {
       '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
   }).addTo(map);
 
-  L.marker([lat, lon]).addTo(map).bindPopup(mapid).openPopup();
+  L.marker([lat, lon]).addTo(map);
 }
 
 const get_address = async (latitude, longitude) => {
@@ -79,7 +79,6 @@ const renderCrimes = (crime, index) => {
   const img = document.createElement("img");
   const card_body = document.createElement("div");
   const card_title = document.createElement("h5");
-  const card_text = document.createElement("p");
   const list_group = document.createElement("ul");
   const list_group_item1 = document.createElement("li");
   const list_group_item2 = document.createElement("li");
@@ -93,14 +92,12 @@ const renderCrimes = (crime, index) => {
   map_crime.setAttribute("id", mapid);
   card_body.className = "card-body";
   card_title.className = "card-title text-center";
-  card_text.className = "card-text";
   list_group.className = "list-group list-group-flush";
   list_group_item1.className = "list-group-item";
   list_group_item2.className = "list-group-item";
   list_group_item3.className = "list-group-item";
 
   card_title.textContent = crime.delito;
-  card_text.textContent = crime.categoria_delito;
   list_group_item3.textContent = `${crime.fecha_hecho} ${crime.hora_hecho}`;
   list_group_item2.textContent = `${crime.latitud_delito}, ${crime.longitud_delito}`;
   list_group_item1.textContent = `${crime.colonia_catalogo}, ${crime.alcaldia_catalogo}`;
@@ -110,7 +107,6 @@ const renderCrimes = (crime, index) => {
   getMapID(crime.latitud_delito, crime.longitud_delito, mapid);
   card_container.appendChild(card_body);
   card_body.appendChild(card_title);
-  card_body.appendChild(card_text);
   card_container.appendChild(list_group);
   list_group.appendChild(list_group_item1);
   list_group.appendChild(list_group_item2);
