@@ -12,7 +12,7 @@ function filter_data(lat,lon){
   for (let index = 0; index < crimesList.length; index++) {
     const difference_lat = Math.abs(crimesList[index].latitud_delito - lat_target);
     const difference_lon = Math.abs(crimesList[index].longitud_delito - lon_target);
-      if (difference_lat <= 0.0001 && difference_lat <= 0.0001) {
+      if (difference_lat <= 0.003 && difference_lon <= 0.003) {
         filterList.push(crimesList[index]);
       }
   }
