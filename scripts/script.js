@@ -251,8 +251,11 @@ function login() {
     })
     .catch(function (error) {
       // Firebase will use this to alert of its errors
-      let error_message = error.message;
-
+      let error_message = !!errorList[error.code]
+      ? errorList[error.code]
+      : !!error.message
+      ? error.message
+      : 'Ocurrió un error inesperado';
       swal({
         icon: "error",
         title: "Oops...",
