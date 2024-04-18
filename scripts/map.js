@@ -5,17 +5,28 @@ const btn_location = document.querySelector("#location-button");
 const location_data = document.querySelector("#neighbourhood");
 const table_crimes = document.querySelector("#table_crimes");
 
-function getMapID(lat,lon,mapid){
-  let map = L.map(mapid).setView([lat,lon],16);
-  L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        attribution:
-          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-      }).addTo(map);
+function filter_data(lat,lon){
+  const filterList = [];
+  const lat_target = lat;
+  const lon_target = lon;
+  for (let index = 0; index < crimesList.length; index++) {
+    const difference_lat = Math.abs(crimesList[index].latitud_delito - lat_target);
+    const difference_lon = Math.abs(crimesList[index].longitud_delito - lon_target);
+      if (difference_lat <= 0.00001 && difference_lat <= 0.00001) {
+        filterList.push(crimesList[index]);
+      }
+  }
+  renderList(filterList);
+}
 
-      L.marker([lat, lon])
-        .addTo(map)
-        .bindPopup(mapid)
-        .openPopup();
+function getMapID(lat, lon, mapid) {
+  let map = L.map(mapid).setView([lat, lon], 16);
+  L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    attribution:
+      '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+  }).addTo(map);
+
+  L.marker([lat, lon]).addTo(map).bindPopup(mapid).openPopup();
 }
 
 const get_address = async (latitude, longitude) => {
@@ -28,8 +39,9 @@ const get_address = async (latitude, longitude) => {
   );
   const data = await response.json();
   const element = document.querySelector("#element");
+  filter_data(latitude,longitude);
   element.textContent = data.address.neighbourhood;
-  element.className = "text-center"
+  element.className = "text-center";
 };
 
 function get_location() {
@@ -72,6 +84,7 @@ const renderCrimes = (crime, index) => {
   const list_group_item1 = document.createElement("li");
   const list_group_item2 = document.createElement("li");
   const list_group_item3 = document.createElement("li");
+  const map_gral = document.querySelector("map");
 
   card_container.className = "card m-3";
   card_container.style = "width: 18rem";
@@ -143,11 +156,11 @@ const getInfoApi = async () => {
       method: "GET",
     });
     const parsed = await response.json();
-    console.log(parsed);
     const array_crimes = parserResponseFireBase(parsed);
     crimesList = array_crimes;
+    console.log(crimesList);
     cleanList();
-    renderList(array_crimes);
+    //renderList(array_crimes);
   } catch (error) {
     swal({
       icon: "error",
@@ -159,7 +172,8 @@ const getInfoApi = async () => {
 
 let crimesList = [];
 
+getInfoApi();
+
 btn_location.addEventListener("click", (event) => {
   get_location();
-  getInfoApi();
 });
