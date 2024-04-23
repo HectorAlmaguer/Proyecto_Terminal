@@ -7,13 +7,10 @@
     <title>Crimenes CDMX</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css"
         integrity="sha384-TX8t27EcRE3e/ihU7zmQxVncDAy5uIKz4rEkgIXeMed4M0jlfIDPvg6uqKI2xXr2" crossorigin="anonymous">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
-    <link rel="stylesheet" href="../css/map.css">
+
 </head>
 
 <body>
-    <!-- navbar -->
     <header>
         <nav class="navbar navbar-expand-lg navbar-light bg-light">
             <a class="navbar-brand" href="./map.html">Asaltos en mi ubicación</a>
@@ -45,27 +42,45 @@
         </nav>
     </header>
     <main>
-        <div id="wrapper">
-            <button id="location-button">Proporciona tu ubicación</button>
-            <div id="neighbourhood">
-                <h2 id="element"></h2>
-            </div>
-        </div>
-        <div id="map"></div>
-        <section id="table_crimes" class="d-flex justify-content-around row mw-100">
+        <section>
+            <select id="alcaldias" class="form-select form-select-lg mb-3" aria-label=".form-select-lg example">
+                <option selected>¿Qué alcaldía deseas consultar?</option>
+                <option value="Álvaro Obregón">Álvaro Obregón</option>
+                <option value="Azcapotzalco">Azcapotzalco</option>
+                <option value="Benito Juárez">Benito Juárez</option>
+                <option value="Coyoacán">Coyoacán</option>
+                <option value="Cuajimalpa de Morelos">Cuajimalpa de Morelos</option>
+                <option value="Cuauhtémoc">Cuauhtémoc</option>
+                <option value="Gustavo A. Madero">Gustavo A. Madero</option>
+                <option value="Iztacalco">Iztacalco</option>
+                <option value="Iztapalapa">Iztapalapa</option>
+                <option value="La Magdalena Contreras">La Magdalena Contreras</option>
+                <option value="Miguel Hidalgo">Miguel Hidalgo</option>
+                <option value="Milpa Alta">Milpa Alta</option>
+                <option value="Tláhuac">Tláhuac</option>
+                <option value="Tlalpan">Tlalpan</option>
+                <option value="Venustiano Carranza">Venustiano Carranza</option>
+                <option value="Xochimilco">Xochimilco</option>
+              </select>
+        </section>
+        <section>
+            <table class="table">
+                <thead>
+                  <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Delito</th>
+                    <th scope="col">Colonia</th>
+                    <th scope="col">Alcaldía</th>
+                    <th scope="col">Fecha</th>
+                    <th scope="col">Coordenadas</th>
+                  </tr>
+                </thead>
+                <tbody id="crimes_list">
+                  
+                </tbody>
+              </table>
         </section>
     </main>
-
-    <!-- The core Firebase JS SDK is always required and must be listed first -->
-    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
-
-    <!-- TODO: Add SDKs for Firebase products that you want to use
-         https://firebase.google.com/docs/web/setup#available-libraries -->
-    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
-
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
     <!-- jQuery full con ajax -->
     <script src="https://code.jquery.com/jquery-3.5.1.js"
@@ -79,8 +94,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.min.js"
         integrity="sha384-w1Q4orYjBQndcko6MimVbzY0tgp4pWB4lZ7lr30WKz0vr/aWKhXdBNmNb5D92v7s"
         crossorigin="anonymous"></script>
-    <script type="module" src="../scripts/map.js"></script>
-
+    <script type="module" src="../scripts/list-filter-alcaldia.js"></script>
 </body>
 
 </html>

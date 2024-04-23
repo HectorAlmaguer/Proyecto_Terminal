@@ -83,7 +83,6 @@ const renderCrimes = (crime, index) => {
   const list_group_item1 = document.createElement("li");
   const list_group_item2 = document.createElement("li");
   const list_group_item3 = document.createElement("li");
-  const map_gral = document.querySelector("map");
 
   card_container.className = "card m-3";
   card_container.style = "width: 18rem";
@@ -156,7 +155,6 @@ const getInfoApi = async () => {
     crimesList = array_crimes;
     console.log(crimesList);
     cleanList();
-    //renderList(array_crimes);
   } catch (error) {
     swal({
       icon: "error",
@@ -168,8 +166,12 @@ const getInfoApi = async () => {
 
 let crimesList = [];
 
-getInfoApi();
-
 btn_location.addEventListener("click", (event) => {
-  get_location();
+  clickeo();
 });
+
+async function clickeo() {
+  let get_data = await getInfoApi();
+  get_data;
+  get_location();
+}

@@ -1,0 +1,14 @@
+ h1 {
+     font-family: "Arial";
+     color: #2980b9;
+ }
+
+ #wrapper {
+     display: flex;
+     flex-direction: column;
+ }
+
+ #map {
+     height: 90vh;
+     width: 90hw;
+ }
