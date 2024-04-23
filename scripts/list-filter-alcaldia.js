@@ -2,54 +2,66 @@ const url_DB =
   "https://proyecto-terminal-ipn-default-rtdb.firebaseio.com/Crimes.json";
 
 const alcaldia = document.querySelector("#alcaldias");
-alcaldia.addEventListener("change", (event) => {
-  const selected = document.querySelector("#alcaldias");
-  const searchValue = selected.value;
-  console.log(searchValue);
-  const filterList = [];
-  for (let index = 0; index < crimesList.length; index++) {
-    const search_case = crimesList[index].alcaldia_catalogo;
-    if (search_case.includes(searchValue)) {
-      filterList.push(crimesList[index]);
-      filterList.forEach((element) => {
-        renderList(filterList);
-      });
-    }
-  }
+
+// Manejar el evento de cambio de alcaldía
+alcaldia.addEventListener("change", async (event) => {
+  const selectedValue = event.target.value;
+  console.log(selectedValue);
+
+  // Filtrar la lista de crímenes por alcaldía seleccionada
+  const filteredCrimes = crimesList.filter((crime) => {
+    return crime.alcaldia_catalogo.includes(selectedValue);
+  });
+
+  // Limitar la lista filtrada a un máximo de 100 elementos
+  const limitedFilteredCrimes = filteredCrimes.slice(0, 100);
+
+  // Limpiar la lista existente antes de renderizar la nueva lista
+  cleanList();
+
+  // Renderizar la lista de crímenes limitada
+  renderList(limitedFilteredCrimes);
 });
 
-const renderCrimes = async (crime) => {
-  cleanList();
-  const table_crimes = document.querySelector("#crimes_list");
-  const row_data = document.createElement("tr");
-  const id_text = document.createElement("th");
-  const cols_data1 = document.createElement("td");
-  const cols_data2 = document.createElement("td");
-  const cols_data3 = document.createElement("td");
-  const cols_data4 = document.createElement("td");
-  const cols_data5 = document.createElement("td");
-
-  id_text.className = "font-weight-bold";
-  id_text.textContent = crime.id;
-  cols_data1.textContent = crime.categoria_delito;
-  cols_data2.textContent = crime.colonia_catalogo;
-  cols_data3.textContent = crime.alcaldia_catalogo;
-  cols_data4.textContent = `${crime.fecha_hecho} ${crime.hora_hecho}`;
-  cols_data5.textContent = `${crime.latitud_delito}, ${crime.longitud_delito}`;
-
-  table_crimes.appendChild(row_data);
-  row_data.appendChild(id_text);
-  row_data.appendChild(cols_data1);
-  row_data.appendChild(cols_data2);
-  row_data.appendChild(cols_data3);
-  row_data.appendChild(cols_data4);
-  row_data.appendChild(cols_data5);
+const renderList = (listToRender) => {
+  console.log(listToRender);
+  listToRender.forEach((crime, index) => {
+    renderCrimes(crime, index);
+  });
 };
 
+// Función para renderizar un solo crimen en la tabla
+const renderCrimes = (crime) => {
+  const tableCrimes = document.querySelector("#crimes_list");
+  const row = document.createElement("tr");
+
+  const idCell = document.createElement("th");
+  idCell.textContent = crime.id;
+
+  const cells = [
+    crime.categoria_delito,
+    crime.colonia_catalogo,
+    crime.alcaldia_catalogo,
+    `${crime.fecha_hecho} ${crime.hora_hecho}`,
+    `${crime.latitud_delito}, ${crime.longitud_delito}`,
+  ];
+
+  // Crear y agregar celdas de datos a la fila
+  row.appendChild(idCell);
+  cells.forEach((cellText) => {
+    const cell = document.createElement("td");
+    cell.textContent = cellText;
+    row.appendChild(cell);
+  });
+
+  // Agregar la fila a la tabla de crímenes
+  tableCrimes.appendChild(row);
+};
+
+// Función para limpiar la lista de crímenes en la tabla
 const cleanList = () => {
-  while (table_crimes.firstChild) {
-    table_crimes.removeChild(table_crimes.firstChild);
-  }
+  const tableCrimes = document.querySelector("#crimes_list");
+  tableCrimes.innerHTML = ""; // Eliminar todo el contenido de la tabla
 };
 
 const parserResponseFireBase = (response) => {
@@ -60,44 +72,51 @@ const parserResponseFireBase = (response) => {
       alcaldia_catalogo: response[key].alcaldia_catalogo,
       categoria_delito: response[key].categoria_delito,
       colonia_catalogo: response[key].colonia_catalogo,
+      delito: response[key].delito,
       fecha_hecho: response[key].fecha_hecho,
       hora_hecho: response[key].hora_hecho,
       latitud_delito: response[key].latitud,
       longitud_delito: response[key].longitud,
+      municipio_hecho: response[key].municipio_hecho,
     };
     parsedResponse.push(element);
   }
   return parsedResponse;
 };
 
-const renderList = (listToRender) => {
-  listToRender.forEach((crime, index) => {
-    renderCrimes(crime, index);
-  });
-};
+// Función para obtener datos de la API y procesarlos
 const getInfoApi = async () => {
   try {
     const response = await fetch(url_DB, {
       method: "GET",
     });
+
+    if (!response.ok) {
+      throw new Error("Error al obtener datos de la API");
+    }
+
     const parsed = await response.json();
-    const array_crimes = parserResponseFireBase(parsed);
-    crimesList = array_crimes;
+    const crimesData = parserResponseFireBase(parsed);
+
+    // Guardar la lista de crímenes obtenida de la API
+    crimesList = crimesData;
+
     console.log(crimesList);
   } catch (error) {
     swal({
       icon: "error",
       title: "Oops...",
-      text: "Error obteniendo crimenes",
+      text: error.message || "Error obteniendo crimenes",
     });
   }
 };
 
-let crimesList = [];
-
+// Llamar a la función para obtener y mostrar los datos de la API
 async function show() {
-  let get_data = await getInfoApi();
-  get_data;
+  await getInfoApi();
 }
 
+let crimesList = [];
+
+// Llamar a la función principal para mostrar los datos
 show();

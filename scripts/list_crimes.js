@@ -1,44 +1,66 @@
 const url_DB =
   "https://proyecto-terminal-ipn-default-rtdb.firebaseio.com/Crimes.json";
 
+// Variables globales para rastrear la lista de crímenes y el contador de crímenes mostrados
+let crimesList = [];
+let displayedCrimesCount = 0;
 
-const slice_crimes = async (crimes_List) => {
-  let crimes = crimes_List.slice(0, 1000);
-  renderList(crimes);
+// Función para obtener datos de la API y procesarlos
+const getInfoApi = async () => {
+  try {
+    const response = await fetch(url_DB, {
+      method: "GET",
+    });
+
+    if (!response.ok) {
+      throw new Error("Error al obtener datos de la API");
+    }
+
+    const parsed = await response.json();
+    crimesList = parserResponseFireBase(parsed); // Guardar la lista de crímenes obtenida de la API
+
+    console.log(crimesList);
+
+    // Mostrar los primeros 100 registros de crímenes al cargar la página
+    displayNextCrimes(100);
+  } catch (error) {
+    swal({
+      icon: "error",
+      title: "Oops...",
+      text: error.message || "Error obteniendo crimenes",
+    });
+  }
 };
 
-const renderCrimes = async (crime,index) => {
-  const table_crimes = document.querySelector("#crimes_list");
-  const row_data = document.createElement("tr");
-  const id_text = document.createElement("th");
-  const cols_data1 = document.createElement("td");
-  const cols_data2 = document.createElement("td");
-  const cols_data3 = document.createElement("td");
-  const cols_data4 = document.createElement("td");
-  const cols_data5 = document.createElement("td");
+// Función para mostrar una cantidad específica de crímenes
+const displayNextCrimes = (count) => {
+  const tableCrimes = document.querySelector("#crimes_list");
+  const container = document.querySelector("#button_space")
 
+  // Determinar cuántos crímenes se mostrarán
+  const endIndex = Math.min(displayedCrimesCount + count, crimesList.length);
 
+  // Renderizar los crímenes en la tabla
+  for (let i = displayedCrimesCount; i < endIndex; i++) {
+    renderCrime(crimesList[i], i + 1); // Renderizar cada crimen con su índice
+  }
 
-  id_text.className = "font-weight-bold";
-  id_text.textContent = index + 1;
-  cols_data1.textContent = crime.categoria_delito;
-  cols_data2.textContent = crime.colonia_catalogo;
-  cols_data3.textContent = crime.alcaldia_catalogo;
-  cols_data4.textContent = `${crime.fecha_hecho} ${crime.hora_hecho}`;
-  cols_data5.textContent = `${crime.latitud_delito}, ${crime.longitud_delito}`;
+  // Actualizar el contador de crímenes mostrados
+  displayedCrimesCount = endIndex;
 
-  table_crimes.appendChild(row_data);
-  row_data.appendChild(id_text);
-  row_data.appendChild(cols_data1);
-  row_data.appendChild(cols_data2);
-  row_data.appendChild(cols_data3);
-  row_data.appendChild(cols_data4);
-  row_data.appendChild(cols_data5);
-};
-
-const cleanList = () => {
-  while (table_crimes.firstChild) {
-    table_crimes.removeChild(table_crimes.firstChild);
+  // Mostrar el botón "Cargar más" si hay más crímenes por mostrar
+  if (displayedCrimesCount < crimesList.length) {
+    const loadMoreButton = document.createElement("button");
+    loadMoreButton.className = "btn btn-primary"
+    loadMoreButton.textContent = "Cargar más";
+    loadMoreButton.style.backgroundColor = "blue";
+    loadMoreButton.style.color = "azure";
+    loadMoreButton.style.alignItems = "center";
+    loadMoreButton.addEventListener("click", () => {
+      displayNextCrimes(100); // Cargar 100 crímenes adicionales al hacer clic en el botón
+      loadMoreButton.remove(); // Eliminar el botón después de cargar más crímenes
+    });
+    container.appendChild(loadMoreButton);
   }
 };
 
@@ -50,46 +72,56 @@ const parserResponseFireBase = (response) => {
       alcaldia_catalogo: response[key].alcaldia_catalogo,
       categoria_delito: response[key].categoria_delito,
       colonia_catalogo: response[key].colonia_catalogo,
+      delito: response[key].delito,
       fecha_hecho: response[key].fecha_hecho,
       hora_hecho: response[key].hora_hecho,
       latitud_delito: response[key].latitud,
       longitud_delito: response[key].longitud,
+      municipio_hecho: response[key].municipio_hecho,
     };
     parsedResponse.push(element);
   }
   return parsedResponse;
 };
 
-const renderList = (listToRender) => {
-  listToRender.forEach((crime, index) => {
-    renderCrimes(crime, index);
+// Función para renderizar un solo crimen en la tabla
+const renderCrime = (crime, index) => {
+  const tableCrimes = document.querySelector("#crimes_list");
+  const row = document.createElement("tr");
+
+  const idCell = document.createElement("th");
+  idCell.textContent = index;
+
+  const cells = [
+    crime.categoria_delito,
+    crime.colonia_catalogo,
+    crime.alcaldia_catalogo,
+    `${crime.fecha_hecho} ${crime.hora_hecho}`,
+    `${crime.latitud_delito}, ${crime.longitud_delito}`,
+  ];
+
+  // Crear y agregar celdas de datos a la fila
+  row.appendChild(idCell);
+  cells.forEach((cellText) => {
+    const cell = document.createElement("td");
+    cell.textContent = cellText;
+    row.appendChild(cell);
   });
-};
-const getInfoApi = async () => {
-  try {
-    const response = await fetch(url_DB, {
-      method: "GET",
-    });
-    const parsed = await response.json();
-    const array_crimes = parserResponseFireBase(parsed);
-    crimesList = array_crimes;
-    console.log(crimesList);
-  } catch (error) {
-    swal({
-      icon: "error",
-      title: "Oops...",
-      text: "Error obteniendo crimenes",
-    });
-  }
+
+  // Agregar la fila a la tabla de crímenes
+  tableCrimes.appendChild(row);
 };
 
-let crimesList = [];
+// Función para limpiar la lista de crímenes en la tabla
+const cleanList = () => {
+  const tableCrimes = document.querySelector("#crimes_list");
+  tableCrimes.innerHTML = ""; // Eliminar todo el contenido de la tabla
+};
 
-async function show() {
-  let get_data = await getInfoApi();
-  let slice1 = await slice_crimes(crimesList);
-  get_data;
-  slice1;
-}
+// Función para inicializar la aplicación
+const initializeApp = async () => {
+  await getInfoApi(); // Obtener datos de la API al cargar la página
+};
 
-show();
+// Llamar a la función de inicialización al cargar la página
+initializeApp();
