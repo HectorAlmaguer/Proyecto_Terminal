@@ -1,5 +1,5 @@
 const url_DB =
-  "https://proyecto-terminal-ipn-default-rtdb.firebaseio.com/Crimes.json";
+  "https://proyecto-ipn-default-rtdb.firebaseio.com/Crimes.json";
 
 function get_user_location() {
   return new Promise((resolve, reject) => {
@@ -118,7 +118,7 @@ async function initialize_map() {
     // Agregar marcadores para cada crimen filtrado
     filteredCrimes.forEach((crime) => {
       const { latitud_delito, longitud_delito} = crime;
-      const crimeMarker = L.marker([latitud_delito, longitud_delito])
+      L.marker([latitud_delito, longitud_delito])
         .addTo(map)
         .bindPopup(crime.delito); // Mostrar descripción del crimen en el popup
     });

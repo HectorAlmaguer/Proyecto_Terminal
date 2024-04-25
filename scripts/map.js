@@ -1,5 +1,5 @@
 const url_DB =
-  "https://proyecto-terminal-ipn-default-rtdb.firebaseio.com/Crimes.json";
+  "https://proyecto-ipn-default-rtdb.firebaseio.com/Crimes.json";
 
 const btn_location = document.querySelector("#location-button");
 const location_data = document.querySelector("#neighbourhood");

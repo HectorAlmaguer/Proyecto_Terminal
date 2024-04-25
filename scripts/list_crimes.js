@@ -1,5 +1,5 @@
 const url_DB =
-  "https://proyecto-terminal-ipn-default-rtdb.firebaseio.com/Crimes.json";
+  "https://proyecto-ipn-default-rtdb.firebaseio.com/Crimes.json";
 
 // Variables globales para rastrear la lista de crímenes y el contador de crímenes mostrados
 let crimesList = [];
