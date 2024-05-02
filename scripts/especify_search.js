@@ -20,6 +20,30 @@ const parserResponseFireBase = (response) => {
   return parsedResponse;
 };
 
+function danger_alert(){
+  swal({
+    icon: "error",
+    title: "Cuidado",
+    text: "Estas en una zona con un alto indice de robos",
+  });
+}
+
+function safe_alert(){
+  swal({
+    icon: "success",
+    title: "Bajo indice",
+    text: "Estas en una zona con un bajo indice de robos",
+  });
+}
+
+function warning_alert(){
+  swal({
+    icon: "warning",
+    title: "Medio indice",
+    text: "Estas en una zona con un medio indice de robos",
+  });
+}
+
 // Función para obtener coordenadas de una dirección usando Nominatim
 async function obtenerCoordenadas(direccion) {
   const baseURL = "https://nominatim.openstreetmap.org/search";
@@ -105,8 +129,12 @@ async function initialize_map(coordinates) {
 
     if (numCrimes < 25) {
       circleColor = "#00ff00"; // Verde si hay menos de 25 crímenes
+      safe_alert();
     } else if (numCrimes >= 25 && numCrimes <= 55) {
       circleColor = "#ffff00"; // Amarillo si hay entre 25 y 55 crímenes
+      warning_alert();
+    }else{
+      danger_alert();
     }
 
     // Agregar círculo al mapa con el radio correspondiente y el color determinado

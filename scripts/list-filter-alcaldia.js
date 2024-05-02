@@ -1,5 +1,4 @@
-const url_DB =
-  "https://proyecto-ipn-default-rtdb.firebaseio.com/Crimes.json";
+const url_DB = "https://proyecto-ipn-default-rtdb.firebaseio.com/Crimes.json";
 
 const alcaldia = document.querySelector("#alcaldias");
 
@@ -106,7 +105,7 @@ const getInfoApi = async () => {
     swal({
       icon: "error",
       title: "Oops...",
-      text: error.message || "Error obteniendo crimenes",
+      text: error.message || "Error obteniendo delitos",
     });
   }
 };

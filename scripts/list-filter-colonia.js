@@ -40,7 +40,7 @@ const populateColonias = (colonias) => {
   const coloniaSelect = document.querySelector("#colonias");
 
   // Limpiar el selector de colonias
-  //coloniaSelect.innerHTML = "";
+  coloniaSelect.innerHTML = "";
 
   // Crear una opción predeterminada para el selector de colonias
   const defaultOption = document.createElement("option");
