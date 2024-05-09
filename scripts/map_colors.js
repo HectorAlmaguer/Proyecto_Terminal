@@ -1,5 +1,64 @@
-const url_DB =
-  "https://proyecto-ipn-default-rtdb.firebaseio.com/Crimes.json";
+const url_DB = "https://proyecto-ipn-default-rtdb.firebaseio.com/Crimes.json";
+
+function danger_alert() {
+  swal({
+    icon: "error",
+    title: "Cuidado, estás en una zona con un alto índice de robos",
+    content: {
+      element: "div",
+      attributes: {
+        innerHTML: `
+          <p>Si notas conductas fuera de lugar, tal como personas que te están siguiendo o que intentan acercarse a ti inesperadamente, trata de incorporarte a un lugar concurrido o cambiar tu trayectoria</p>
+          <ul>
+            <li>Evita uso de tu teléfono o audífonos</li>
+            <li>Evita tener a la vista objetos de valor</li>
+            <li>Evita sitios oscuros y solitarios</li>
+          </ul>
+        `
+      }
+    },
+  });
+}
+
+function safe_alert() {
+  swal({
+    icon: "success",
+    title: "Estás en una zona con un bajo índice de robos",
+    content: {
+      element: "div",
+      attributes: {
+        innerHTML: `
+          <ul>
+            <li>Evita uso de tu teléfono o audífonos</li>
+            <li>Evita tener a la vista objetos de valor</li>
+            <li>Evita sitios oscuros y solitarios</li>
+          </ul>
+        `
+      }
+    },
+  });
+}
+
+function warning_alert() {
+  swal({
+    icon: "warning",
+    title: "Estás en una zona con un medio índice de robos",
+    content: {
+      element: "div",
+      attributes: {
+        innerHTML: `
+          <p>Si notas conductas fuera de lugar, tal como personas que te están siguiendo o que intentan acercarse a ti inesperadamente, trata de incorporarte a un lugar concurrido o cambiar tu trayectoria</p>
+          <ul>
+            <li>Evita uso de tu teléfono o audífonos</li>
+            <li>Evita tener a la vista objetos de valor</li>
+            <li>Evita sitios oscuros y solitarios</li>
+          </ul>
+        `
+      }
+    },
+  });
+}
+
 
 function get_user_location() {
   return new Promise((resolve, reject) => {
@@ -96,10 +155,14 @@ async function initialize_map() {
     const numCrimes = filteredCrimes.length;
     let circleColor = "#ff0000"; // Rojo por defecto
 
-    if (numCrimes < 30) {
-      circleColor = "#00ff00"; // Verde si hay menos de 30 crímenes
-    } else if (numCrimes >= 30 && numCrimes <= 60) {
-      circleColor = "#ffff00"; // Amarillo si hay entre 30 y 60 crímenes
+    if (numCrimes < 25) {
+      circleColor = "#00ff00"; // Verde si hay menos de 25 crímenes
+      safe_alert();
+    } else if (numCrimes >= 25 && numCrimes <= 55) {
+      circleColor = "#ffff00"; // Amarillo si hay entre 25 y 55 crímenes
+      warning_alert();
+    } else {
+      danger_alert();
     }
 
     // Agregar círculo al mapa con el radio correspondiente y el color determinado
@@ -117,7 +180,7 @@ async function initialize_map() {
 
     // Agregar marcadores para cada crimen filtrado
     filteredCrimes.forEach((crime) => {
-      const { latitud_delito, longitud_delito} = crime;
+      const { latitud_delito, longitud_delito } = crime;
       L.marker([latitud_delito, longitud_delito])
         .addTo(map)
         .bindPopup(crime.delito); // Mostrar descripción del crimen en el popup

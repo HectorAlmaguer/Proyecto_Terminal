@@ -1,5 +1,26 @@
 const url_DB = "https://proyecto-ipn-default-rtdb.firebaseio.com/Crimes.json";
 
+let map; // Variable global para almacenar el objeto de mapa
+
+function filter_coordinates_CDMX(coordinate) {
+  // Coordenadas aproximadas de los límites de la Ciudad de México
+  const minLat = 19.0;
+  const maxLat = 19.7;
+  const minLon = -99.4;
+  const maxLon = -98.9;
+
+  // Verificar si las coordenadas están dentro de los límites de la Ciudad de México
+  if (
+    coordinate.lat >= minLat &&
+    coordinate.lat <= maxLat &&
+    coordinate.lon >= minLon &&
+    coordinate.lon <= maxLon
+  ) {
+    return true; // Las coordenadas están dentro de la Ciudad de México
+  } else {
+    return false; // Las coordenadas no están dentro de la Ciudad de México
+  }
+}
 const parserResponseFireBase = (response) => {
   const parsedResponse = [];
   for (const key in response) {
@@ -20,29 +41,66 @@ const parserResponseFireBase = (response) => {
   return parsedResponse;
 };
 
-function danger_alert(){
+function danger_alert() {
   swal({
     icon: "error",
-    title: "Cuidado",
-    text: "Estas en una zona con un alto indice de robos",
+    title: "Cuidado, es una zona con un alto índice de robos",
+    content: {
+      element: "div",
+      attributes: {
+        innerHTML: `
+          <p>Si notas conductas fuera de lugar, tal como personas que te están siguiendo o que intentan acercarse a ti inesperadamente, trata de incorporarte a un lugar concurrido o cambiar tu trayectoria</p>
+          <ul>
+            <li>Evita uso de tu teléfono o audífonos</li>
+            <li>Evita tener a la vista objetos de valor</li>
+            <li>Evita sitios oscuros y solitarios</li>
+          </ul>
+        `
+      }
+    },
   });
 }
 
-function safe_alert(){
+function safe_alert() {
   swal({
     icon: "success",
-    title: "Bajo indice",
-    text: "Estas en una zona con un bajo indice de robos",
+    title: "Es una zona con un bajo índice de robos",
+    content: {
+      element: "div",
+      attributes: {
+        innerHTML: `
+          <ul>
+            <li>Evita uso de tu teléfono o audífonos</li>
+            <li>Evita tener a la vista objetos de valor</li>
+            <li>Evita sitios oscuros y solitarios</li>
+          </ul>
+        `
+      }
+    },
   });
 }
 
-function warning_alert(){
+function warning_alert() {
   swal({
     icon: "warning",
-    title: "Medio indice",
-    text: "Estas en una zona con un medio indice de robos",
+    title: "Es una zona con un medio índice de robos",
+    content: {
+      element: "div",
+      attributes: {
+        innerHTML: `
+          <ul>
+            <li>Evita uso de tu teléfono o audífonos</li>
+            <li>Evita tener a la vista objetos de valor</li>
+            <li>Evita sitios oscuros y solitarios</li>
+          </ul>
+        `
+      }
+    },
   });
 }
+
+
+
 
 // Función para obtener coordenadas de una dirección usando Nominatim
 async function obtenerCoordenadas(direccion) {
@@ -95,8 +153,6 @@ async function load_crimes_list() {
 }
 
 function filter_crimes_by_location(crimesList, Coords) {
-    
-    console.log(Coords.lat,Coords.lon)
   const filteredCrimes = crimesList.filter((crime) => {
     const { latitud_delito, longitud_delito } = crime;
     const latDifference = Math.abs(latitud_delito - Coords.lat);
@@ -108,7 +164,20 @@ function filter_crimes_by_location(crimesList, Coords) {
 
 // Función principal para inicializar el mapa y cargar la información
 async function initialize_map(coordinates) {
-  const map = L.map("map").setView([coordinates.lat, coordinates.lon], 18);
+  if (!filter_coordinates_CDMX(coordinates)) {
+    swal({
+      icon: "error",
+      title: "Oops...",
+      text: "Parece que la direccion que buscas no pertenece a la Ciudad de México",
+    });
+    return;
+  }
+  if (map) {
+    // Si ya hay un mapa inicializado, eliminarlo antes de crear uno nuevo
+    map.remove();
+  }
+
+  map = L.map("map").setView([coordinates.lat, coordinates.lon], 18);
 
   L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
     attribution:
@@ -133,7 +202,7 @@ async function initialize_map(coordinates) {
     } else if (numCrimes >= 25 && numCrimes <= 55) {
       circleColor = "#ffff00"; // Amarillo si hay entre 25 y 55 crímenes
       warning_alert();
-    }else{
+    } else {
       danger_alert();
     }
 
