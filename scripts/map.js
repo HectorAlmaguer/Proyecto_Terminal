@@ -1,22 +1,93 @@
-const url_DB =
-  "https://proyecto-ipn-default-rtdb.firebaseio.com/Crimes.json";
+const url_DB = "https://proyecto-ipn-default-rtdb.firebaseio.com/Crimes.json";
 
 const btn_location = document.querySelector("#location-button");
 const location_data = document.querySelector("#neighbourhood");
 const table_crimes = document.querySelector("#table_crimes");
 
-function filter_data(lat,lon){
+function danger_alert() {
+  swal({
+    icon: "error",
+    title: "Cuidado, estás en una zona con un alto índice de robos",
+    content: {
+      element: "div",
+      attributes: {
+        innerHTML: `
+          <p>Si notas conductas fuera de lugar, tal como personas que te están siguiendo o que intentan acercarse a ti inesperadamente, trata de incorporarte a un lugar concurrido o cambiar tu trayectoria</p>
+          <ul>
+            <li>Evita uso de tu teléfono o audífonos</li>
+            <li>Evita tener a la vista objetos de valor</li>
+            <li>Evita sitios oscuros y solitarios</li>
+          </ul>
+        `
+      }
+    },
+  });
+}
+
+function safe_alert() {
+  swal({
+    icon: "success",
+    title: "Estás en una zona con un bajo índice de robos",
+    content: {
+      element: "div",
+      attributes: {
+        innerHTML: `
+          <ul>
+            <li>Evita uso de tu teléfono o audífonos</li>
+            <li>Evita tener a la vista objetos de valor</li>
+            <li>Evita sitios oscuros y solitarios</li>
+          </ul>
+        `
+      }
+    },
+  });
+}
+
+function warning_alert() {
+  swal({
+    icon: "warning",
+    title: "Estás en una zona con un medio índice de robos",
+    content: {
+      element: "div",
+      attributes: {
+        innerHTML: `
+          <p>Si notas conductas fuera de lugar, tal como personas que te están siguiendo o que intentan acercarse a ti inesperadamente, trata de incorporarte a un lugar concurrido o cambiar tu trayectoria</p>
+          <ul>
+            <li>Evita uso de tu teléfono o audífonos</li>
+            <li>Evita tener a la vista objetos de valor</li>
+            <li>Evita sitios oscuros y solitarios</li>
+          </ul>
+        `
+      }
+    },
+  });
+}
+
+function filter_data(lat, lon) {
   const filterList = [];
   const lat_target = lat;
   const lon_target = lon;
   for (let index = 0; index < crimesList.length; index++) {
-    const difference_lat = Math.abs(crimesList[index].latitud_delito - lat_target);
-    const difference_lon = Math.abs(crimesList[index].longitud_delito - lon_target);
-      if (difference_lat <= 0.003 && difference_lon <= 0.003) {
-        filterList.push(crimesList[index]);
-      }
+    const difference_lat = Math.abs(
+      crimesList[index].latitud_delito - lat_target
+    );
+    const difference_lon = Math.abs(
+      crimesList[index].longitud_delito - lon_target
+    );
+    if (difference_lat <= 0.0025 && difference_lon <= 0.0025) {
+      filterList.push(crimesList[index]);
+    }
   }
   renderList(filterList);
+  const numCrimes = filterList.length;
+
+  if (numCrimes < 25) {
+    safe_alert();
+  } else if (numCrimes >= 25 && numCrimes <= 55) {
+    warning_alert();
+  } else {
+    danger_alert();
+  }
 }
 
 function getMapID(lat, lon, mapid) {
@@ -29,6 +100,19 @@ function getMapID(lat, lon, mapid) {
   L.marker([lat, lon]).addTo(map);
 }
 
+// Definir los límites de la Ciudad de México
+const CDMX_BOUNDS = {
+  north: 19.592757,
+  south: 19.189715,
+  west: -99.334529,
+  east: -98.960387
+};
+
+function isWithinCDMX(lat, lon) {
+  return lat >= CDMX_BOUNDS.south && lat <= CDMX_BOUNDS.north &&
+         lon >= CDMX_BOUNDS.west && lon <= CDMX_BOUNDS.east;
+}
+
 const get_address = async (latitude, longitude) => {
   const response = await fetch(
     "https://nominatim.openstreetmap.org/reverse?lat=" +
@@ -39,9 +123,17 @@ const get_address = async (latitude, longitude) => {
   );
   const data = await response.json();
   const element = document.querySelector("#element");
-  filter_data(latitude,longitude);
-  element.textContent = data.address.neighbourhood;
-  element.className = "text-center";
+  if (isWithinCDMX(latitude, longitude)) {
+    filter_data(latitude, longitude);
+    element.textContent = data.address.neighbourhood;
+    element.className = "text-center";
+  } else {
+    swal({
+      icon: "error",
+      title: "Ubicación fuera de la Ciudad de México",
+      text: "La aplicación solo muestra información de la Ciudad de México.",
+    });
+  }
 };
 
 function get_location() {
@@ -60,7 +152,7 @@ function get_location() {
 
       L.marker([position.coords.latitude, position.coords.longitude])
         .addTo(map)
-        .bindPopup("Estas aqui")
+        .bindPopup("Estás aquí")
         .openPopup();
     },
     (e) => {
