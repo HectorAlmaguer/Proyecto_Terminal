@@ -7,7 +7,7 @@ const table_crimes = document.querySelector("#table_crimes");
 function danger_alert() {
   swal({
     icon: "error",
-    title: "Cuidado, estás en una zona con un alto índice de robos",
+    title: "Cuidado, estás en una zona con un índice alto de robos",
     content: {
       element: "div",
       attributes: {
@@ -27,7 +27,7 @@ function danger_alert() {
 function safe_alert() {
   swal({
     icon: "success",
-    title: "Estás en una zona con un bajo índice de robos",
+    title: "Estás en una zona con un índice bajo de robos",
     content: {
       element: "div",
       attributes: {
@@ -46,7 +46,7 @@ function safe_alert() {
 function warning_alert() {
   swal({
     icon: "warning",
-    title: "Estás en una zona con un medio índice de robos",
+    title: "Estás en una zona con un índice medio de robos",
     content: {
       element: "div",
       attributes: {

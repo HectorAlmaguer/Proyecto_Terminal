@@ -1,4 +1,5 @@
-const url_DB = "https://proyecto-ipn-default-rtdb.firebaseio.com/Crimes.json";
+const url_DB_crimes = "https://proyecto-ipn-default-rtdb.firebaseio.com/Crimes.json";
+const url_DB_buttons = "https://proyecto-ipn-default-rtdb.firebaseio.com/botones.json";
 
 let map; // Variable global para almacenar el objeto de mapa
 
@@ -10,17 +11,14 @@ function filter_coordinates_CDMX(coordinate) {
   const maxLon = -98.9;
 
   // Verificar si las coordenadas están dentro de los límites de la Ciudad de México
-  if (
+  return (
     coordinate.lat >= minLat &&
     coordinate.lat <= maxLat &&
     coordinate.lon >= minLon &&
     coordinate.lon <= maxLon
-  ) {
-    return true; // Las coordenadas están dentro de la Ciudad de México
-  } else {
-    return false; // Las coordenadas no están dentro de la Ciudad de México
-  }
+  );
 }
+
 const parserResponseFireBase = (response) => {
   const parsedResponse = [];
   for (const key in response) {
@@ -44,7 +42,7 @@ const parserResponseFireBase = (response) => {
 function danger_alert() {
   swal({
     icon: "error",
-    title: "Cuidado, es una zona con un alto índice de robos",
+    title: "Cuidado, es una zona con un índice alto de robos",
     content: {
       element: "div",
       attributes: {
@@ -64,7 +62,7 @@ function danger_alert() {
 function safe_alert() {
   swal({
     icon: "success",
-    title: "Es una zona con un bajo índice de robos",
+    title: "Es una zona con un índice bajo de robos",
     content: {
       element: "div",
       attributes: {
@@ -83,7 +81,7 @@ function safe_alert() {
 function warning_alert() {
   swal({
     icon: "warning",
-    title: "Es una zona con un medio índice de robos",
+    title: "Es una zona con un índice medio de robos",
     content: {
       element: "div",
       attributes: {
@@ -98,9 +96,6 @@ function warning_alert() {
     },
   });
 }
-
-
-
 
 // Función para obtener coordenadas de una dirección usando Nominatim
 async function obtenerCoordenadas(direccion) {
@@ -133,7 +128,7 @@ async function obtenerCoordenadas(direccion) {
 // Función para cargar la lista de crímenes desde la API
 async function load_crimes_list() {
   try {
-    const response = await fetch(url_DB, { method: "GET" });
+    const response = await fetch(url_DB_crimes, { method: "GET" });
 
     if (!response.ok) {
       throw new Error(
@@ -142,9 +137,7 @@ async function load_crimes_list() {
     }
 
     const parsed = await response.json();
-
-    const crimesList = parserResponseFireBase(parsed);
-    return crimesList;
+    return parserResponseFireBase(parsed);
   } catch (error) {
     throw new Error(
       `Error al procesar la respuesta de la API: ${error.message}`
@@ -153,13 +146,92 @@ async function load_crimes_list() {
 }
 
 function filter_crimes_by_location(crimesList, Coords) {
-  const filteredCrimes = crimesList.filter((crime) => {
+  return crimesList.filter((crime) => {
     const { latitud_delito, longitud_delito } = crime;
     const latDifference = Math.abs(latitud_delito - Coords.lat);
     const lonDifference = Math.abs(longitud_delito - Coords.lon);
     return latDifference <= 0.0025 && lonDifference <= 0.0025;
   });
-  return filteredCrimes;
+}
+
+// Función para verificar si las coordenadas están dentro de la Ciudad de México
+const CDMX_BOUNDS = {
+  north: 19.592757,
+  south: 19.189715,
+  west: -99.334529,
+  east: -98.960387,
+};
+
+function isWithinCDMX(lat, lon) {
+  return (
+    lat >= CDMX_BOUNDS.south &&
+    lat <= CDMX_BOUNDS.north &&
+    lon >= CDMX_BOUNDS.west &&
+    lon <= CDMX_BOUNDS.east
+  );
+}
+
+async function get_user_location() {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) {
+      reject(
+        new Error("La geolocalización no está disponible en este navegador.")
+      );
+    }
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        const userCoords = { lat: latitude, lon: longitude };
+        resolve(userCoords);
+      },
+      (error) => {
+        reject(error);
+      }
+    );
+  });
+}
+
+const parserButtonsResponseFireBase = (response) => {
+  const parsedResponse = [];
+  for (const key in response) {
+    const element = {
+      id: key,
+      Alcaldia: response[key].Alcaldía,
+      Colonia: response[key].Colonia,
+      latitud_boton: response[key].Latitud,
+      longitud_boton: response[key].Longitud,
+    };
+    parsedResponse.push(element);
+  }
+  return parsedResponse;
+};
+
+function filter_buttons_by_location(buttonsList, userCoords) {
+  return buttonsList.filter((button) => {
+    const { latitud_boton, longitud_boton } = button;
+    const latDifference = Math.abs(latitud_boton - userCoords.lat);
+    const lonDifference = Math.abs(longitud_boton - userCoords.lon);
+    return latDifference <= 0.0025 && lonDifference <= 0.0025;
+  });
+}
+
+async function load_buttons_list() {
+  try {
+    const response = await fetch(url_DB_buttons, { method: "GET" });
+
+    if (!response.ok) {
+      throw new Error(
+        `Error al cargar la lista de botones de pánico: ${response.statusText}`
+      );
+    }
+
+    const parsed = await response.json();
+    return parserButtonsResponseFireBase(parsed);
+  } catch (error) {
+    throw new Error(
+      `Error al procesar la respuesta de la API: ${error.message}`
+    );
+  }
 }
 
 // Función principal para inicializar el mapa y cargar la información
@@ -168,7 +240,7 @@ async function initialize_map(coordinates) {
     swal({
       icon: "error",
       title: "Oops...",
-      text: "Parece que la direccion que buscas no pertenece a la Ciudad de México",
+      text: "Parece que la dirección que buscas no pertenece a la Ciudad de México",
     });
     return;
   }
@@ -187,7 +259,7 @@ async function initialize_map(coordinates) {
   try {
     // Calcular el radio en grados de latitud para aproximadamente 1 kilómetro
     const radiusInDegrees = 1 / 111;
-    console.log(coordinates);
+
     // Determinar el color del círculo según la cantidad de crímenes filtrados
     const filteredCrimes = filter_crimes_by_location(
       await load_crimes_list(),
@@ -222,6 +294,29 @@ async function initialize_map(coordinates) {
       L.marker([latitud_delito, longitud_delito])
         .addTo(map)
         .bindPopup(crime.delito); // Mostrar descripción del crimen en el popup
+    });
+
+    // Agregar marcadores para los botones de pánico
+    const filteredButtons = filter_buttons_by_location(
+      await load_buttons_list(),
+      coordinates
+    );
+
+    filteredButtons.forEach((button) => {
+      const { latitud_boton, longitud_boton } = button;
+      L.marker([latitud_boton, longitud_boton], {
+        icon: L.icon({
+          iconUrl: "../media/red_icon.webp",
+          shadowUrl:
+            "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+          iconSize: [25, 41],
+          iconAnchor: [12, 41],
+          popupAnchor: [1, -34],
+          shadowSize: [41, 41],
+        }),
+      })
+        .addTo(map)
+        .bindPopup("Botón de Pánico CDMX C5");
     });
   } catch (error) {
     console.error("Error al cargar la información del mapa:", error.message);
@@ -280,3 +375,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 });
+
+(async function() {
+  await initialize_map();
+})();
+
