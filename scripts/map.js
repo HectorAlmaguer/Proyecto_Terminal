@@ -18,8 +18,8 @@ function danger_alert() {
             <li>Evita tener a la vista objetos de valor</li>
             <li>Evita sitios oscuros y solitarios</li>
           </ul>
-        `
-      }
+        `,
+      },
     },
   });
 }
@@ -37,8 +37,8 @@ function safe_alert() {
             <li>Evita tener a la vista objetos de valor</li>
             <li>Evita sitios oscuros y solitarios</li>
           </ul>
-        `
-      }
+        `,
+      },
     },
   });
 }
@@ -57,8 +57,8 @@ function warning_alert() {
             <li>Evita tener a la vista objetos de valor</li>
             <li>Evita sitios oscuros y solitarios</li>
           </ul>
-        `
-      }
+        `,
+      },
     },
   });
 }
@@ -105,12 +105,16 @@ const CDMX_BOUNDS = {
   north: 19.592757,
   south: 19.189715,
   west: -99.334529,
-  east: -98.960387
+  east: -98.960387,
 };
 
 function isWithinCDMX(lat, lon) {
-  return lat >= CDMX_BOUNDS.south && lat <= CDMX_BOUNDS.north &&
-         lon >= CDMX_BOUNDS.west && lon <= CDMX_BOUNDS.east;
+  return (
+    lat >= CDMX_BOUNDS.south &&
+    lat <= CDMX_BOUNDS.north &&
+    lon >= CDMX_BOUNDS.west &&
+    lon <= CDMX_BOUNDS.east
+  );
 }
 
 const get_address = async (latitude, longitude) => {
@@ -152,10 +156,9 @@ function startTracking() {
         '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
     }).addTo(map);
 
-    L.marker([position.coords.latitude, position.coords.longitude],{
+    L.marker([position.coords.latitude, position.coords.longitude], {
       icon: L.icon({
-        iconUrl:
-          "../media/gps_icon.webp",
+        iconUrl: "../media/gps_icon.webp",
         shadowUrl:
           "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
         iconSize: [25, 41],
@@ -280,6 +283,37 @@ const getInfoApi = async () => {
 };
 
 let crimesList = [];
+document
+  .getElementById("update-database-button")
+  .addEventListener("click", async () => {
+    // Mostrar alerta de espera
+    const swalLoading = swal({
+      title: "Actualizando base de datos...",
+      text: "Esto puede tardar unos momentos.",
+      icon: "info",
+      buttons: false,
+      closeOnClickOutside: false,
+      closeOnEsc: false,
+    });
+
+    try {
+      // Llamar a la función que obtiene la data
+      await getInfoApi();
+      swalLoading.close();
+      swal({
+        icon: "success",
+        title: "Base de datos actualizada",
+        text: "La base de datos se ha actualizado correctamente.",
+      });
+    } catch (error) {
+      swalLoading.close();
+      swal({
+        icon: "error",
+        title: "Error al actualizar",
+        text: "Hubo un problema al actualizar la base de datos.",
+      });
+    }
+  });
 
 btn_location.addEventListener("click", (event) => {
   clickeo();

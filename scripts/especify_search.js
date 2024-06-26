@@ -1,5 +1,7 @@
-const url_DB_crimes = "https://proyecto-ipn-default-rtdb.firebaseio.com/Crimes.json";
-const url_DB_buttons = "https://proyecto-ipn-default-rtdb.firebaseio.com/botones.json";
+const url_DB_crimes =
+  "https://proyecto-ipn-default-rtdb.firebaseio.com/Crimes.json";
+const url_DB_buttons =
+  "https://proyecto-ipn-default-rtdb.firebaseio.com/botones.json";
 
 let map; // Variable global para almacenar el objeto de mapa
 
@@ -53,8 +55,8 @@ function danger_alert() {
             <li>Evita tener a la vista objetos de valor</li>
             <li>Evita sitios oscuros y solitarios</li>
           </ul>
-        `
-      }
+        `,
+      },
     },
   });
 }
@@ -72,8 +74,8 @@ function safe_alert() {
             <li>Evita tener a la vista objetos de valor</li>
             <li>Evita sitios oscuros y solitarios</li>
           </ul>
-        `
-      }
+        `,
+      },
     },
   });
 }
@@ -91,8 +93,8 @@ function warning_alert() {
             <li>Evita tener a la vista objetos de valor</li>
             <li>Evita sitios oscuros y solitarios</li>
           </ul>
-        `
-      }
+        `,
+      },
     },
   });
 }
@@ -145,12 +147,12 @@ async function load_crimes_list() {
   }
 }
 
-function filter_crimes_by_location(crimesList, Coords) {
+function filter_crimes_by_location(crimesList, Coords, distance) {
   return crimesList.filter((crime) => {
     const { latitud_delito, longitud_delito } = crime;
     const latDifference = Math.abs(latitud_delito - Coords.lat);
     const lonDifference = Math.abs(longitud_delito - Coords.lon);
-    return latDifference <= 0.0025 && lonDifference <= 0.0025;
+    return latDifference <= distance && lonDifference <= distance;
   });
 }
 
@@ -206,12 +208,12 @@ const parserButtonsResponseFireBase = (response) => {
   return parsedResponse;
 };
 
-function filter_buttons_by_location(buttonsList, userCoords) {
+function filter_buttons_by_location(buttonsList, userCoords, distance) {
   return buttonsList.filter((button) => {
     const { latitud_boton, longitud_boton } = button;
     const latDifference = Math.abs(latitud_boton - userCoords.lat);
     const lonDifference = Math.abs(longitud_boton - userCoords.lon);
-    return latDifference <= 0.0025 && lonDifference <= 0.0025;
+    return latDifference <= distance && lonDifference <= distance;
   });
 }
 
@@ -235,7 +237,7 @@ async function load_buttons_list() {
 }
 
 // Función principal para inicializar el mapa y cargar la información
-async function initialize_map(coordinates) {
+async function initialize_map(coordinates, distance) {
   if (!filter_coordinates_CDMX(coordinates)) {
     swal({
       icon: "error",
@@ -258,12 +260,13 @@ async function initialize_map(coordinates) {
 
   try {
     // Calcular el radio en grados de latitud para aproximadamente 1 kilómetro
-    const radiusInDegrees = 1 / 111;
+    const radiusInDegrees = distance;
 
     // Determinar el color del círculo según la cantidad de crímenes filtrados
     const filteredCrimes = filter_crimes_by_location(
       await load_crimes_list(),
-      coordinates
+      coordinates,
+      radiusInDegrees
     );
     const numCrimes = filteredCrimes.length;
     let circleColor = "#ff0000"; // Rojo por defecto
@@ -280,7 +283,7 @@ async function initialize_map(coordinates) {
 
     // Agregar círculo al mapa con el radio correspondiente y el color determinado
     L.circle([coordinates.lat, coordinates.lon], {
-      radius: radiusInDegrees * 40000,
+      radius: radiusInDegrees * 161111,
       fillColor: circleColor,
       color: circleColor,
       weight: 3,
@@ -299,7 +302,8 @@ async function initialize_map(coordinates) {
     // Agregar marcadores para los botones de pánico
     const filteredButtons = filter_buttons_by_location(
       await load_buttons_list(),
-      coordinates
+      coordinates,
+      radiusInDegrees
     );
 
     filteredButtons.forEach((button) => {
@@ -334,6 +338,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Agregar evento click al botón de búsqueda
   searchButton.addEventListener("click", async () => {
     const direccionInput = document.getElementById("direccionInput").value;
+    const distanceSelect = document.getElementById("distanceSelect").value;
 
     // Verificar si la entrada de dirección no está vacía
     if (direccionInput.trim() === "") {
@@ -357,7 +362,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         // Llamar a la función principal para inicializar el mapa y cargar la información
-        initialize_map(coordenadas);
+        initialize_map(coordenadas, parseFloat(distanceSelect));
       } else {
         swal({
           icon: "error",
@@ -376,7 +381,38 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
-(async function() {
+document
+  .getElementById("update-database-button")
+  .addEventListener("click", async () => {
+    // Mostrar alerta de espera
+    const swalLoading = swal({
+      title: "Actualizando base de datos...",
+      text: "Esto puede tardar unos momentos.",
+      icon: "info",
+      buttons: false,
+      closeOnClickOutside: false,
+      closeOnEsc: false,
+    });
+
+    try {
+      // Llamar a la función que obtiene la data
+      await getInfoApi();
+      swalLoading.close();
+      swal({
+        icon: "success",
+        title: "Base de datos actualizada",
+        text: "La base de datos se ha actualizado correctamente.",
+      });
+    } catch (error) {
+      swalLoading.close();
+      swal({
+        icon: "error",
+        title: "Error al actualizar",
+        text: "Hubo un problema al actualizar la base de datos.",
+      });
+    }
+  });
+
+(async function () {
   await initialize_map();
 })();
-

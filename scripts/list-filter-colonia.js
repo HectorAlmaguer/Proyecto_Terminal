@@ -1,5 +1,4 @@
-const url_DB =
-  "https://proyecto-ipn-default-rtdb.firebaseio.com/Crimes.json";
+const url_DB = "https://proyecto-ipn-default-rtdb.firebaseio.com/Crimes.json";
 // Variables globales para almacenar la lista de crímenes y los selectores HTML
 let crimesList = [];
 let renderedCrimesCount = 0; // Contador para rastrear el número de crímenes renderizados
@@ -209,6 +208,38 @@ const populateAlcaldias = (alcaldias) => {
     alcaldiaSelect.appendChild(option);
   });
 };
+
+document
+  .getElementById("update-database-button")
+  .addEventListener("click", async () => {
+    // Mostrar alerta de espera
+    const swalLoading = swal({
+      title: "Actualizando base de datos...",
+      text: "Esto puede tardar unos momentos.",
+      icon: "info",
+      buttons: false,
+      closeOnClickOutside: false,
+      closeOnEsc: false,
+    });
+
+    try {
+      // Llamar a la función que obtiene la data
+      await getInfoApi();
+      swalLoading.close();
+      swal({
+        icon: "success",
+        title: "Base de datos actualizada",
+        text: "La base de datos se ha actualizado correctamente.",
+      });
+    } catch (error) {
+      swalLoading.close();
+      swal({
+        icon: "error",
+        title: "Error al actualizar",
+        text: "Hubo un problema al actualizar la base de datos.",
+      });
+    }
+  });
 
 // Llamar a la función para obtener y mostrar los datos de la API al cargar la página
 getInfoApi();
