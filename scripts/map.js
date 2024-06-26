@@ -171,7 +171,7 @@ async function initialize_map() {
     const buttonsList = await load_buttons_list();
     const crimesList = await load_crimes_list();
 
-    map.on('moveend', async function() {
+    map.on("moveend", async function () {
       const bounds = map.getBounds();
       const southwest = bounds.getSouthWest();
       const northeast = bounds.getNorthEast();
@@ -180,10 +180,10 @@ async function initialize_map() {
         minLat: southwest.lat,
         maxLat: northeast.lat,
         minLon: southwest.lng,
-        maxLon: northeast.lng
+        maxLon: northeast.lng,
       };
 
-      const filteredCrimes = crimesList.filter(crime => {
+      const filteredCrimes = crimesList.filter((crime) => {
         return (
           crime.latitud_delito >= visibleArea.minLat &&
           crime.latitud_delito <= visibleArea.maxLat &&
@@ -213,13 +213,13 @@ async function initialize_map() {
       }
 
       // Limpia los marcadores de crímenes antes de añadir los nuevos
-      map.eachLayer(layer => {
+      map.eachLayer((layer) => {
         if (layer instanceof L.Marker) {
           map.removeLayer(layer);
         }
       });
 
-      filteredCrimes.forEach(crime => {
+      filteredCrimes.forEach((crime) => {
         const { latitud_delito, longitud_delito } = crime;
         L.marker([latitud_delito, longitud_delito])
           .addTo(map)
@@ -241,10 +241,10 @@ document
     // Mostrar alerta de espera
     const swalLoading = swal({
       title: "Actualizando base de datos...",
-      text: "Esto puede tardar unos momentos.",
+      text: "Esto puede tardar unos momentos. Puedes salir de esta ventana dando click afuera del recuadro, la base de datos aun asi se actualizara",
       icon: "info",
       buttons: false,
-      closeOnClickOutside: false,
+      closeOnClickOutside: true,
       closeOnEsc: false,
     });
 

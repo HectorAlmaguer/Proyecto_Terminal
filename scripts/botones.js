@@ -148,36 +148,35 @@ async function initialize_map() {
   }
 }
 
-document
-  .getElementById("update-database-button")
-  .addEventListener("click", async () => {
-    // Mostrar alerta de espera
-    const swalLoading = swal({
+document.getElementById("update-database-button").addEventListener("click", async () => {
+  // Mostrar alerta de espera
+  const swalLoading = swal({
       title: "Actualizando base de datos...",
       text: "Esto puede tardar unos momentos.",
       icon: "info",
       buttons: false,
-      closeOnClickOutside: false,
-      closeOnEsc: false,
-    });
-
-    try {
-      // Llamar a la función que obtiene la data
-      await getInfoApi();
-      swalLoading.close();
-      swal({
-        icon: "success",
-        title: "Base de datos actualizada",
-        text: "La base de datos se ha actualizado correctamente.",
-      });
-    } catch (error) {
-      swalLoading.close();
-      swal({
-        icon: "error",
-        title: "Error al actualizar",
-        text: "Hubo un problema al actualizar la base de datos.",
-      });
-    }
+      closeOnClickOutside: true,
+      closeOnEsc: false
   });
+
+  try {
+      // Llamar a la función que obtiene la data
+      await load_buttons_list();
+      swalLoading.close();
+      swal({
+          icon: "success",
+          title: "Base de datos actualizada",
+          text: "La base de datos se ha actualizado correctamente.",
+      });
+  } catch (error) {
+      swalLoading.close();
+      swal({
+          icon: "error",
+          title: "Error al actualizar",
+          text: "Hubo un problema al actualizar la base de datos.",
+      });
+  }
+});
+
 // Llamar a la función principal para inicializar el mapa y cargar la información
 initialize_map();
