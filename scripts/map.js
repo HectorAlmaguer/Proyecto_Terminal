@@ -136,33 +136,56 @@ const get_address = async (latitude, longitude) => {
   }
 };
 
-function get_location() {
-  navigator.geolocation.getCurrentPosition(
-    (position) => {
-      get_address(position.coords.latitude, position.coords.longitude);
-      let map = L.map("map").setView(
-        [position.coords.latitude, position.coords.longitude],
-        16
-      );
+function startTracking() {
+  let watchId;
 
-      L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        attribution:
-          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-      }).addTo(map);
+  function success(position) {
+    get_address(position.coords.latitude, position.coords.longitude);
 
-      L.marker([position.coords.latitude, position.coords.longitude])
-        .addTo(map)
-        .bindPopup("Estás aquí")
-        .openPopup();
-    },
-    (e) => {
-      swal({
-        icon: "error",
-        title: "Oops...",
-        text: "Debes permitir el acceso a la ubicación para mostrar información.",
-      });
-    }
-  );
+    let map = L.map("map").setView(
+      [position.coords.latitude, position.coords.longitude],
+      16
+    );
+
+    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution:
+        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    }).addTo(map);
+
+    L.marker([position.coords.latitude, position.coords.longitude],{
+      icon: L.icon({
+        iconUrl:
+          "../media/gps_icon.webp",
+        shadowUrl:
+          "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41],
+      }),
+    })
+      .addTo(map)
+      .bindPopup("Estás aquí")
+      .openPopup();
+  }
+
+  function error(e) {
+    swal({
+      icon: "error",
+      title: "Oops...",
+      text: "Debes permitir el acceso a la ubicación para mostrar información.",
+    });
+  }
+
+  if ("geolocation" in navigator) {
+    watchId = navigator.geolocation.watchPosition(success, error, {
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 0,
+    });
+  } else {
+    console.error("Geolocation is not supported by this browser.");
+  }
 }
 
 const renderCrimes = (crime, index) => {
@@ -265,5 +288,5 @@ btn_location.addEventListener("click", (event) => {
 async function clickeo() {
   let get_data = await getInfoApi();
   get_data;
-  get_location();
+  startTracking();
 }

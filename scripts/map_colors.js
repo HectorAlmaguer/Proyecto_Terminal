@@ -1,5 +1,7 @@
-const url_DB_buttons = "https://proyecto-ipn-default-rtdb.firebaseio.com/botones.json";
-const url_DB_crimes = "https://proyecto-ipn-default-rtdb.firebaseio.com/Crimes.json";
+const url_DB_buttons =
+  "https://proyecto-ipn-default-rtdb.firebaseio.com/botones.json";
+const url_DB_crimes =
+  "https://proyecto-ipn-default-rtdb.firebaseio.com/Crimes.json";
 
 const CDMX_BOUNDS = {
   north: 19.592757,
@@ -8,7 +10,6 @@ const CDMX_BOUNDS = {
   east: -98.960387,
 };
 
-// Función para verificar si las coordenadas están dentro de la Ciudad de México
 function isWithinCDMX(lat, lon) {
   return (
     lat >= CDMX_BOUNDS.south &&
@@ -151,8 +152,8 @@ function danger_alert() {
             <li>Evita tener a la vista objetos de valor</li>
             <li>Evita sitios oscuros y solitarios</li>
           </ul>
-        `
-      }
+        `,
+      },
     },
   });
 }
@@ -170,8 +171,8 @@ function safe_alert() {
             <li>Evita tener a la vista objetos de valor</li>
             <li>Evita sitios oscuros y solitarios</li>
           </ul>
-        `
-      }
+        `,
+      },
     },
   });
 }
@@ -190,8 +191,8 @@ function warning_alert() {
             <li>Evita tener a la vista objetos de valor</li>
             <li>Evita sitios oscuros y solitarios</li>
           </ul>
-        `
-      }
+        `,
+      },
     },
   });
 }
@@ -204,11 +205,11 @@ async function initialize_map() {
       '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
   }).addTo(map);
 
-  try {
-    // Obtener la ubicación del usuario
-    const userCoords = await get_user_location();
+  let userCoords;
 
-    // Verificar si la ubicación del usuario está dentro de los límites de la Ciudad de México
+  try {
+    userCoords = await get_user_location();
+
     if (!isWithinCDMX(userCoords[0], userCoords[1])) {
       swal({
         icon: "error",
@@ -218,35 +219,34 @@ async function initialize_map() {
       return;
     }
 
-    // Volar al mapa centrado en la ubicación del usuario
     map.flyTo(userCoords, 17);
 
     const radiusInDegrees = 1 / 111;
 
-    // Cargar la lista de botones de pánico y crímenes
     const buttonsList = await load_buttons_list();
     const crimesList = await load_crimes_list();
 
-    // Filtrar los botones de pánico y crímenes por la ubicación del usuario
-    const filteredButtons = filter_buttons_by_location(buttonsList, userCoords);
-    const filteredCrimes = filter_crimes_by_location(crimesList, userCoords);
+    let filteredButtons = filter_buttons_by_location(buttonsList, userCoords);
+    let filteredCrimes = filter_crimes_by_location(crimesList, userCoords);
 
-    // Determinar el color del círculo según la cantidad de crímenes filtrados
     const numCrimes = filteredCrimes.length;
-    let circleColor = "#ff0000"; // Rojo por defecto
+    let circleColor = "#ff0000";
 
     if (numCrimes < 25) {
-      circleColor = "#00ff00"; // Verde si hay menos de 25 crímenes
+      circleColor = "#00ff00";
       safe_alert();
     } else if (numCrimes >= 25 && numCrimes <= 55) {
-      circleColor = "#ffff00"; // Amarillo si hay entre 25 y 55 crímenes
+      circleColor = "#ffff00";
       warning_alert();
     } else {
       danger_alert();
     }
 
-    // Agregar círculo al mapa con el radio correspondiente y el color determinado
-    L.circle(userCoords, {
+    let userMarker = L.marker(userCoords)
+      .addTo(map)
+      .bindPopup("Estás aquí")
+      .openPopup();
+    let circle = L.circle(userCoords, {
       radius: radiusInDegrees * 40000,
       fillColor: circleColor,
       color: circleColor,
@@ -255,16 +255,13 @@ async function initialize_map() {
       fillOpacity: 0.6,
     }).addTo(map);
 
-    // Agregar marcador para la ubicación del usuario
-    L.marker(userCoords).addTo(map).bindPopup("Estás aquí").openPopup();
-
-    // Agregar marcadores para cada botón filtrado
-    filteredButtons.forEach((button) => {
+    let buttonMarkers = filteredButtons.map((button) => {
       const { latitud_boton, longitud_boton } = button;
-      L.marker([latitud_boton, longitud_boton], {
+      return L.marker([latitud_boton, longitud_boton], {
         icon: L.icon({
           iconUrl: "../media/red_icon.webp",
-          shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+          shadowUrl:
+            "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
           iconSize: [25, 41],
           iconAnchor: [12, 41],
           popupAnchor: [1, -34],
@@ -275,13 +272,112 @@ async function initialize_map() {
         .bindPopup("Botón de Pánico CDMX C5");
     });
 
-    // Agregar marcadores para cada crimen filtrado
-    filteredCrimes.forEach((crime) => {
+    let crimeMarkers = filteredCrimes.map((crime) => {
       const { latitud_delito, longitud_delito } = crime;
-      L.marker([latitud_delito, longitud_delito])
+      return L.marker([latitud_delito, longitud_delito])
         .addTo(map)
         .bindPopup(crime.delito);
     });
+
+    function updateMap(position) {
+      const { latitude, longitude } = position.coords;
+      userCoords = [latitude, longitude];
+
+      if (!isWithinCDMX(userCoords[0], userCoords[1])) {
+        swal({
+          icon: "error",
+          title: "Ubicación fuera de la Ciudad de México",
+          text: "La aplicación solo muestra información de la Ciudad de México.",
+        });
+        return;
+      }
+
+      map.flyTo(userCoords, 17);
+
+      filteredButtons = filter_buttons_by_location(buttonsList, userCoords);
+      filteredCrimes = filter_crimes_by_location(crimesList, userCoords);
+
+      const numCrimes = filteredCrimes.length;
+      let circleColor = "#ff0000";
+
+      if (numCrimes < 25) {
+        circleColor = "#00ff00";
+        safe_alert();
+      } else if (numCrimes >= 25 && numCrimes <= 55) {
+        circleColor = "#ffff00";
+        warning_alert();
+      } else {
+        danger_alert();
+      }
+
+      map.removeLayer(userMarker);
+      map.removeLayer(circle);
+      buttonMarkers.forEach((marker) => map.removeLayer(marker));
+      crimeMarkers.forEach((marker) => map.removeLayer(marker));
+
+      userMarker = L.marker(userCoords, {
+        icon: L.icon({
+          iconUrl: "../media/gps_icon.webp",
+          shadowUrl:
+            "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+          iconSize: [25, 41],
+          iconAnchor: [12, 41],
+          popupAnchor: [1, -34],
+          shadowSize: [41, 41],
+        }),
+      })
+        .addTo(map)
+        .bindPopup("Estás aquí")
+        .openPopup();
+      circle = L.circle(userCoords, {
+        radius: radiusInDegrees * 40000,
+        fillColor: circleColor,
+        color: circleColor,
+        weight: 3,
+        opacity: 1,
+        fillOpacity: 0.6,
+      }).addTo(map);
+
+      buttonMarkers = filteredButtons.map((button) => {
+        const { latitud_boton, longitud_boton } = button;
+        return L.marker([latitud_boton, longitud_boton], {
+          icon: L.icon({
+            iconUrl: "../media/red_icon.webp",
+            shadowUrl:
+              "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            shadowSize: [41, 41],
+          }),
+        })
+          .addTo(map)
+          .bindPopup("Botón de Pánico CDMX C5");
+      });
+
+      crimeMarkers = filteredCrimes.map((crime) => {
+        const { latitud_delito, longitud_delito } = crime;
+        return L.marker([latitud_delito, longitud_delito])
+          .addTo(map)
+          .bindPopup(crime.delito);
+      });
+    }
+
+    navigator.geolocation.watchPosition(
+      updateMap,
+      (error) => {
+        swal({
+          icon: "error",
+          title: "Error en la geolocalización",
+          text: error.message || "Error inesperado",
+        });
+      },
+      {
+        enableHighAccuracy: true,
+        maximumAge: 0,
+        timeout: 5000,
+      }
+    );
   } catch (error) {
     swal({
       icon: "error",
