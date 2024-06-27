@@ -3,42 +3,36 @@ const url_DB_buttons =
 const url_DB_crimes =
   "https://proyecto-ipn-default-rtdb.firebaseio.com/Crimes.json";
 
-const CDMX_BOUNDS = {
-  north: 19.592757,
-  south: 19.189715,
-  west: -99.334529,
-  east: -98.960387,
-};
+function isWithinCDMX(latitude, longitude) {
+  const CDMX_BOUNDS = {
+    north: 19.5928,
+    south: 19.203,
+    west: -99.3646,
+    east: -98.9408,
+  };
 
-function isWithinCDMX(lat, lon) {
   return (
-    lat >= CDMX_BOUNDS.south &&
-    lat <= CDMX_BOUNDS.north &&
-    lon >= CDMX_BOUNDS.west &&
-    lon <= CDMX_BOUNDS.east
+    latitude >= CDMX_BOUNDS.south &&
+    latitude <= CDMX_BOUNDS.north &&
+    longitude >= CDMX_BOUNDS.west &&
+    longitude <= CDMX_BOUNDS.east
   );
 }
 
 async function get_user_location() {
   return new Promise((resolve, reject) => {
-    if (!navigator.geolocation) {
-      reject(
-        new Error("La geolocalización no está disponible en este navegador.")
-      );
-    }
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const { latitude, longitude } = position.coords;
-        const userCoords = [latitude, longitude];
-        resolve(userCoords);
+        resolve([latitude, longitude]);
       },
       (error) => {
         reject(error);
-      }
+      },
+      { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
     );
   });
 }
-
 const parserResponseFireBaseButtons = (response) => {
   const parsedResponse = [];
   for (const key in response) {
@@ -73,27 +67,6 @@ const parserResponseFireBaseCrimes = (response) => {
   }
   return parsedResponse;
 };
-
-function filter_buttons_by_location(buttonsList, userCoords) {
-  const filteredButtons = buttonsList.filter((button) => {
-    const { latitud_boton, longitud_boton } = button;
-    const latDifference = Math.abs(latitud_boton - userCoords[0]);
-    const lonDifference = Math.abs(longitud_boton - userCoords[1]);
-    return latDifference <= 0.0025 && lonDifference <= 0.0025;
-  });
-  return filteredButtons;
-}
-
-function filter_crimes_by_location(crimesList, userCoords) {
-  const filteredCrimes = crimesList.filter((crime) => {
-    const { latitud_delito, longitud_delito } = crime;
-    const latDifference = Math.abs(latitud_delito - userCoords[0]);
-    const lonDifference = Math.abs(longitud_delito - userCoords[1]);
-    return latDifference <= 0.0025 && lonDifference <= 0.0025;
-  });
-  return filteredCrimes;
-}
-
 async function load_buttons_list() {
   try {
     const response = await fetch(url_DB_buttons, { method: "GET" });
@@ -105,13 +78,17 @@ async function load_buttons_list() {
     }
 
     const parsed = await response.json();
-    console.log("Datos recibidos de la API:", parsed);
+    console.log("Datos recibidos de la API de botones:", parsed);
 
     const buttonsList = parserResponseFireBaseButtons(parsed);
     return buttonsList;
   } catch (error) {
+    console.error(
+      "Error al procesar la respuesta de la API de botones:",
+      error
+    );
     throw new Error(
-      `Error al procesar la respuesta de la API: ${error.message}`
+      `Error al procesar la respuesta de la API de botones: ${error.message}`
     );
   }
 }
@@ -127,75 +104,40 @@ async function load_crimes_list() {
     }
 
     const parsed = await response.json();
-    console.log("Datos recibidos de la API:", parsed);
+    console.log("Datos recibidos de la API de crímenes:", parsed);
 
     const crimesList = parserResponseFireBaseCrimes(parsed);
     return crimesList;
   } catch (error) {
+    console.error(
+      "Error al procesar la respuesta de la API de crímenes:",
+      error
+    );
     throw new Error(
-      `Error al procesar la respuesta de la API: ${error.message}`
+      `Error al procesar la respuesta de la API de crímenes: ${error.message}`
     );
   }
 }
 
-function danger_alert() {
-  swal({
-    icon: "error",
-    title: "Cuidado, estás en una zona con un índice alto de robos",
-    content: {
-      element: "div",
-      attributes: {
-        innerHTML: `
-            <p>Si notas conductas fuera de lugar, tal como personas que te están siguiendo o que intentan acercarse a ti inesperadamente, trata de incorporarte a un lugar concurrido o cambiar tu trayectoria</p>
-            <ul>
-              <li>Evita uso de tu teléfono o audífonos</li>
-              <li>Evita tener a la vista objetos de valor</li>
-              <li>Evita sitios oscuros y solitarios</li>
-            </ul>
-          `,
-      },
-    },
+function filter_buttons_by_location(buttonsList, userCoords, distance) {
+  return buttonsList.filter((button) => {
+    const { latitud_boton, longitud_boton } = button;
+    const latDifference = Math.abs(latitud_boton - userCoords[0]);
+    const lonDifference = Math.abs(longitud_boton - userCoords[1]);
+    return latDifference <= distance && lonDifference <= distance;
   });
 }
 
-function safe_alert() {
-  swal({
-    icon: "success",
-    title: "Estás en una zona con un índice bajo de robos",
-    content: {
-      element: "div",
-      attributes: {
-        innerHTML: `
-            <ul>
-              <li>Evita uso de tu teléfono o audífonos</li>
-              <li>Evita tener a la vista objetos de valor</li>
-              <li>Evita sitios oscuros y solitarios</li>
-            </ul>
-          `,
-      },
-    },
+function filter_crimes_by_location(crimesList, userCoords, distance) {
+  return crimesList.filter((crime) => {
+    const { latitud_delito, longitud_delito } = crime;
+    const latDifference = Math.abs(latitud_delito - userCoords[0]);
+    const lonDifference = Math.abs(longitud_delito - userCoords[1]);
+    return latDifference <= distance && lonDifference <= distance;
   });
 }
 
-function warning_alert() {
-  swal({
-    icon: "warning",
-    title: "Estás en una zona con un índice medio de robos",
-    content: {
-      element: "div",
-      attributes: {
-        innerHTML: `
-            <p>Si notas conductas fuera de lugar, tal como personas que te están siguiendo o que intentan acercarse a ti inesperadamente, trata de incorporarte a un lugar concurrido o cambiar tu trayectoria</p>
-            <ul>
-              <li>Evita uso de tu teléfono o audífonos</li>
-              <li>Evita tener a la vista objetos de valor</li>
-              <li>Evita sitios oscuros y solitarios</li>
-            </ul>
-          `,
-      },
-    },
-  });
-}
+let circle; // Declaración global de la variable circle
 
 async function initialize_map() {
   const map = L.map("map").setView([19.4326018, -99.1332049], 15);
@@ -206,13 +148,12 @@ async function initialize_map() {
   }).addTo(map);
 
   let userCoords;
-  let currentCircleColor = "";
 
   try {
     userCoords = await get_user_location();
 
     if (!isWithinCDMX(userCoords[0], userCoords[1])) {
-      swal({
+      Swal.fire({
         icon: "error",
         title: "Ubicación fuera de la Ciudad de México",
         text: "La aplicación solo muestra información de la Ciudad de México.",
@@ -222,215 +163,194 @@ async function initialize_map() {
 
     map.flyTo(userCoords, 17);
 
-    const radiusInDegrees = 1 / 111;
-
     const buttonsList = await load_buttons_list();
     const crimesList = await load_crimes_list();
 
-    let filteredButtons = filter_buttons_by_location(buttonsList, userCoords);
-    let filteredCrimes = filter_crimes_by_location(crimesList, userCoords);
+    const distanceSelect = document.getElementById("distance-select");
+    let distance = parseFloat(distanceSelect.value);
 
-    const numCrimes = filteredCrimes.length;
-    let circleColor = "#ff0000";
-
-    if (numCrimes < 25) {
-      circleColor = "#00ff00";
-    } else if (numCrimes >= 25 && numCrimes <= 55) {
-      circleColor = "#ffff00";
-    }
-
-    if (currentCircleColor !== circleColor) {
-      currentCircleColor = circleColor;
-      if (circleColor === "#00ff00") {
-        safe_alert();
-      } else if (circleColor === "#ffff00") {
-        warning_alert();
-      } else {
-        danger_alert();
-      }
-    }
-
-    let userMarker = L.marker(userCoords)
-      .addTo(map)
-      .bindPopup("Estás aquí")
-      .openPopup();
-    let circle = L.circle(userCoords, {
-      radius: radiusInDegrees * 40000,
-      fillColor: circleColor,
-      color: circleColor,
-      weight: 3,
-      opacity: 1,
-      fillOpacity: 0.6,
-    }).addTo(map);
-
-    let buttonMarkers = filteredButtons.map((button) => {
-      const { latitud_boton, longitud_boton } = button;
-      return L.marker([latitud_boton, longitud_boton], {
-        icon: L.icon({
-          iconUrl: "../media/red_icon.webp",
-          shadowUrl:
-            "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
-          iconSize: [25, 41],
-          iconAnchor: [12, 41],
-          popupAnchor: [1, -34],
-          shadowSize: [41, 41],
-        }),
-      })
-        .addTo(map)
-        .bindPopup("Botón de Pánico CDMX C5");
-    });
-
-    let crimeMarkers = filteredCrimes.map((crime) => {
-      const { latitud_delito, longitud_delito } = crime;
-      return L.marker([latitud_delito, longitud_delito])
-        .addTo(map)
-        .bindPopup(crime.delito);
-    });
-
-    function updateMap(position) {
-      const { latitude, longitude } = position.coords;
-      userCoords = [latitude, longitude];
-
-      if (!isWithinCDMX(userCoords[0], userCoords[1])) {
-        swal({
-          icon: "error",
-          title: "Ubicación fuera de la Ciudad de México",
-          text: "La aplicación solo muestra información de la Ciudad de México.",
-        });
-        return;
-      }
-
-      map.flyTo(userCoords, 17);
-
-      filteredButtons = filter_buttons_by_location(buttonsList, userCoords);
-      filteredCrimes = filter_crimes_by_location(crimesList, userCoords);
-
-      const numCrimes = filteredCrimes.length;
-      let circleColor = "#ff0000";
-
-      if (numCrimes < 25) {
-        circleColor = "#00ff00";
-      } else if (numCrimes >= 25 && numCrimes <= 55) {
-        circleColor = "#ffff00";
-      }
-
-      if (currentCircleColor !== circleColor) {
-        currentCircleColor = circleColor;
-        if (circleColor === "#00ff00") {
-          safe_alert();
-        } else if (circleColor === "#ffff00") {
-          warning_alert();
-        } else {
-          danger_alert();
-        }
-      }
-
-      map.removeLayer(userMarker);
-      map.removeLayer(circle);
-      buttonMarkers.forEach((marker) => map.removeLayer(marker));
-      crimeMarkers.forEach((marker) => map.removeLayer(marker));
-
-      userMarker = L.marker(userCoords, {
-        icon: L.icon({
-          iconUrl: "../media/gps_icon.webp",
-          shadowUrl:
-            "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
-          iconSize: [25, 41],
-          iconAnchor: [12, 41],
-          popupAnchor: [1, -34],
-          shadowSize: [41, 41],
-        }),
-      })
-        .addTo(map)
-        .openPopup();
-      circle = L.circle(userCoords, {
-        radius: radiusInDegrees * 40000,
-        fillColor: circleColor,
-        color: circleColor,
-        weight: 3,
-        opacity: 1,
-        fillOpacity: 0.6,
-      }).addTo(map);
-
-      buttonMarkers = filteredButtons.map((button) => {
-        const { latitud_boton, longitud_boton } = button;
-        return L.marker([latitud_boton, longitud_boton], {
-          icon: L.icon({
-            iconUrl: "../media/red_icon.webp",
-            shadowUrl:
-              "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
-            iconSize: [25, 41],
-            iconAnchor: [12, 41],
-            popupAnchor: [1, -34],
-            shadowSize: [41, 41],
-          }),
-        })
-          .addTo(map)
-          .bindPopup("Botón de Pánico CDMX C5");
-      });
-
-      crimeMarkers = filteredCrimes.map((crime) => {
-        const { latitud_delito, longitud_delito } = crime;
-        return L.marker([latitud_delito, longitud_delito])
-          .addTo(map)
-          .bindPopup(crime.delito);
-      });
-    }
-
-    navigator.geolocation.watchPosition(
-      updateMap,
-      (error) => {
-        swal({
-          icon: "error",
-          title: "Error en la geolocalización",
-          text: error.message || "Error inesperado",
-        });
-      },
-      {
-        enableHighAccuracy: true,
-        maximumAge: 0,
-        timeout: 5000,
-      }
+    let filteredButtons = filter_buttons_by_location(
+      buttonsList,
+      userCoords,
+      distance
     );
+    let filteredCrimes = filter_crimes_by_location(
+      crimesList,
+      userCoords,
+      distance
+    );
+
+    updateMapElements(
+      map,
+      userCoords,
+      filteredButtons,
+      filteredCrimes,
+      distance
+    );
+
+    distanceSelect.addEventListener("change", async () => {
+      distance = parseFloat(distanceSelect.value);
+
+      filteredButtons = filter_buttons_by_location(
+        buttonsList,
+        userCoords,
+        distance
+      );
+      filteredCrimes = filter_crimes_by_location(
+        crimesList,
+        userCoords,
+        distance
+      );
+
+      updateMapElements(
+        map,
+        userCoords,
+        filteredButtons,
+        filteredCrimes,
+        distance
+      );
+    });
   } catch (error) {
-    swal({
+    console.error("Error obteniendo la ubicación del usuario:", error);
+    Swal.fire({
       icon: "error",
-      title: "Oops...",
-      text: error.message || "Error inesperado",
+      title: "Error de Geolocalización",
+      text: "No se pudo obtener la ubicación del usuario.",
     });
   }
 }
 
-document.getElementById("update-database-button").addEventListener("click", async () => {
-  // Mostrar alerta de espera
-  const swalLoading = swal({
-      title: "Actualizando base de datos...",
-      text: "Esto puede tardar unos momentos.",
-      icon: "info",
-      buttons: false,
-      closeOnClickOutside: true,
-      closeOnEsc: false
+function updateMapElements(map, userCoords, buttonsList, crimesList, distance) {
+  let buttonMarkers = buttonsList.map((button) => {
+    const { latitud_boton, longitud_boton } = button;
+    return L.marker([latitud_boton, longitud_boton], {
+      icon: L.icon({
+        iconUrl: "../media/red_icon.webp",
+        shadowUrl:
+          "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41],
+      }),
+    })
+      .addTo(map)
+      .bindPopup("Botón de Pánico CDMX C5");
   });
 
+  let crimeMarkers = crimesList.map((crime) => {
+    const { latitud_delito, longitud_delito } = crime;
+    return L.marker([latitud_delito, longitud_delito])
+      .addTo(map)
+      .bindPopup(crime.delito);
+  });
+
+  let circleColor = "#ff0000"; // Color por defecto
+  let circleRadius = 1000; // Radio en metros por defecto
+
+  // Factor de multiplicación basado en la distancia
+  let factor = 1;
+  if (distance <= 0.25) {
+    factor = 1; // Multiplicar por 1 si la distancia es <= 250 metros
+  } else if (distance <= 0.5) {
+    factor = 2; // Multiplicar por 2 si la distancia es <= 500 metros
+  } else if (distance <= 1) {
+    factor = 4; // Multiplicar por 4 si la distancia es <= 1 kilómetro
+  }
+
+  const numCrimes = crimesList.length * factor;
+
+  // Definir los valores estáticos dinámicamente
+  let safeThreshold = 25 * factor;
+  let mediumThreshold = 55 * factor;
+
+  if (numCrimes < safeThreshold) {
+    circleColor = "#00ff00";
+    safe_alert(); // Verde para zonas seguras
+  } else if (numCrimes >= safeThreshold && numCrimes <= mediumThreshold) {
+    circleColor = "#ffff00";
+    warning_alert(); // Amarillo para zonas de riesgo medio
+  } else {
+    circleColor = "#ff0000";
+    danger_alert(); // Rojo para zonas de alto riesgo
+  }
+
+  if (circle) {
+    map.removeLayer(circle);
+  }
+
+  const radiusInMeters = distance * 161111; // Convertir distancia en kilómetros a metros
+
+  circle = L.circle(userCoords, {
+    radius: radiusInMeters,
+    fillColor: circleColor,
+    color: circleColor,
+    weight: 3,
+    opacity: 1,
+    fillOpacity: 0.6,
+  }).addTo(map);
+
+  map.setView(userCoords, map.getZoom());
+}
+
+
+async function getInfoApi() {
+  // Aquí iría el código para obtener la información desde tu API y actualizar la base de datos
+  console.log("Obteniendo información desde la API...");
+}
+
+function safe_alert() {
+  Swal.fire({
+    icon: "success",
+    title: "Zona Segura",
+    text: "Estás en una zona segura.",
+  });
+}
+
+function warning_alert() {
+  Swal.fire({
+    icon: "warning",
+    title: "Zona de Riesgo Medio",
+    text: "Estás en una zona de riesgo medio.",
+  });
+}
+
+function danger_alert() {
+  Swal.fire({
+    icon: "error",
+    title: "Zona de Alto Riesgo",
+    text: "Estás en una zona de alto riesgo.",
+  });
+}
+
+const updateButton = document.getElementById("update-database-button");
+updateButton.addEventListener("click", async () => {
   try {
-      // Llamar a la función que obtiene la data
-      await getInfoApi();
-      swalLoading.then((value) => {
-          if (value.dismiss === swal.DismissReason.timer) {
-              console.log("Cerrando alerta");
-          }
-      });
-      swal({
-          icon: "success",
-          title: "Base de datos actualizada",
-          text: "La base de datos se ha actualizado correctamente.",
-      });
+    const swalLoading = Swal.fire({
+      title: "Actualizando base de datos...",
+      text: "Por favor, espera un momento.",
+      icon: "info",
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      didOpen: () => {
+        Swal.showLoading();
+      },
+    });
+
+    await getInfoApi();
+    swalLoading.close();
+
+    Swal.fire({
+      icon: "success",
+      title: "Base de datos actualizada",
+      text: "La base de datos se ha actualizado correctamente.",
+    });
   } catch (error) {
-      swal({
-          icon: "error",
-          title: "Error al actualizar",
-          text: "Hubo un problema al actualizar la base de datos.",
-      });
+    Swal.fire({
+      icon: "error",
+      title: "Error al actualizar",
+      text: "Hubo un problema al actualizar la base de datos.",
+    });
   }
 });
 
