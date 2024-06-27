@@ -3,6 +3,7 @@ const url_DB_buttons =
 const url_DB_crimes =
   "https://proyecto-ipn-default-rtdb.firebaseio.com/Crimes.json";
 
+// Función para verificar si las coordenadas están dentro de los límites de la Ciudad de México
 function isWithinCDMX(latitude, longitude) {
   const CDMX_BOUNDS = {
     north: 19.5928,
@@ -19,6 +20,7 @@ function isWithinCDMX(latitude, longitude) {
   );
 }
 
+// Función asincrónica para obtener la ubicación del usuario
 async function get_user_location() {
   return new Promise((resolve, reject) => {
     navigator.geolocation.getCurrentPosition(
@@ -33,6 +35,8 @@ async function get_user_location() {
     );
   });
 }
+
+// Función para parsear la respuesta de Firebase para los botones de pánico
 const parserResponseFireBaseButtons = (response) => {
   const parsedResponse = [];
   for (const key in response) {
@@ -48,6 +52,7 @@ const parserResponseFireBaseButtons = (response) => {
   return parsedResponse;
 };
 
+// Función para parsear la respuesta de Firebase para los crímenes
 const parserResponseFireBaseCrimes = (response) => {
   const parsedResponse = [];
   for (const key in response) {
@@ -67,6 +72,8 @@ const parserResponseFireBaseCrimes = (response) => {
   }
   return parsedResponse;
 };
+
+// Función asincrónica para cargar la lista de botones de pánico desde la API
 async function load_buttons_list() {
   try {
     const response = await fetch(url_DB_buttons, { method: "GET" });
@@ -93,6 +100,7 @@ async function load_buttons_list() {
   }
 }
 
+// Función asincrónica para cargar la lista de crímenes desde la API
 async function load_crimes_list() {
   try {
     const response = await fetch(url_DB_crimes, { method: "GET" });
@@ -119,6 +127,7 @@ async function load_crimes_list() {
   }
 }
 
+// Función para filtrar los botones de pánico por ubicación dentro de una distancia dada
 function filter_buttons_by_location(buttonsList, userCoords, distance) {
   return buttonsList.filter((button) => {
     const { latitud_boton, longitud_boton } = button;
@@ -128,6 +137,7 @@ function filter_buttons_by_location(buttonsList, userCoords, distance) {
   });
 }
 
+// Función para filtrar los crímenes por ubicación dentro de una distancia dada
 function filter_crimes_by_location(crimesList, userCoords, distance) {
   return crimesList.filter((crime) => {
     const { latitud_delito, longitud_delito } = crime;
@@ -136,9 +146,8 @@ function filter_crimes_by_location(crimesList, userCoords, distance) {
     return latDifference <= distance && lonDifference <= distance;
   });
 }
-
-let circle; // Declaración global de la variable circle
-
+let circle;
+// Función para inicializar el mapa y cargar la información inicial
 async function initialize_map() {
   const map = L.map("map").setView([19.4326018, -99.1332049], 15);
 
@@ -148,7 +157,6 @@ async function initialize_map() {
   }).addTo(map);
 
   let userCoords;
-  let circle;
 
   try {
     userCoords = await get_user_location();
@@ -167,12 +175,17 @@ async function initialize_map() {
     const distanceSelect = document.getElementById("distance-select");
     let distance = parseFloat(distanceSelect.value);
 
-    distanceSelect.addEventListener("change", async () => {
+    // Cargar los datos originales solo una vez al inicio
+    const originalButtonsList = await load_buttons_list();
+    const originalCrimesList = await load_crimes_list();
+
+    distanceSelect.addEventListener("change", () => {
       distance = parseFloat(distanceSelect.value);
-      updateMapElements(map, userCoords, distance);
+      updateMapElements(map, userCoords, distance, originalButtonsList, originalCrimesList);
     });
 
-    await updateMapElements(map, userCoords, distance);
+    // Llamar a updateMapElements con los datos originales
+    await updateMapElements(map, userCoords, distance, originalButtonsList, originalCrimesList);
 
   } catch (error) {
     console.error("Error obteniendo la ubicación del usuario:", error);
@@ -184,24 +197,10 @@ async function initialize_map() {
   }
 }
 
-async function updateMapElements(map, userCoords, distance) {
-  let buttonsList, crimesList;
-
-  try {
-    buttonsList = await load_buttons_list();
-    crimesList = await load_crimes_list();
-  } catch (error) {
-    console.error("Error al cargar los datos:", error);
-    Swal.fire({
-      icon: "error",
-      title: "Error de carga de datos",
-      text: "Hubo un problema al cargar los datos de los botones y crímenes.",
-    });
-    return;
-  }
-
-  const filteredButtons = filter_buttons_by_location(buttonsList, userCoords, distance);
-  const filteredCrimes = filter_crimes_by_location(crimesList, userCoords, distance);
+// Función para actualizar los elementos del mapa
+async function updateMapElements(map, userCoords, distance, originalButtonsList, originalCrimesList) {
+  let filteredButtons = filter_buttons_by_location(originalButtonsList, userCoords, distance);
+  let filteredCrimes = filter_crimes_by_location(originalCrimesList, userCoords, distance);
 
   let buttonMarkers = [];
   let crimeMarkers = [];
@@ -266,6 +265,7 @@ async function updateMapElements(map, userCoords, distance) {
     danger_alert(); // Rojo para zonas de alto riesgo
   }
 
+  // Eliminar círculo anterior si existe
   if (circle) {
     map.removeLayer(circle);
   }
@@ -309,6 +309,10 @@ function danger_alert() {
   });
 }
 
+// Llamar a la función principal para inicializar el mapa y cargar la información
+initialize_map();
+
+// Evento para actualizar la base de datos al hacer clic en el botón correspondiente
 const updateButton = document.getElementById("update-database-button");
 updateButton.addEventListener("click", async () => {
   try {
@@ -323,7 +327,9 @@ updateButton.addEventListener("click", async () => {
       },
     });
 
-    await getInfoApi();
+    // Llamar a la función para actualizar la base de datos
+    await updateDatabase();
+
     swalLoading.close();
 
     Swal.fire({
@@ -331,6 +337,10 @@ updateButton.addEventListener("click", async () => {
       title: "Base de datos actualizada",
       text: "La base de datos se ha actualizado correctamente.",
     });
+
+    // Recargar el mapa con los nuevos datos actualizados
+    await initialize_map();
+
   } catch (error) {
     Swal.fire({
       icon: "error",
@@ -340,5 +350,9 @@ updateButton.addEventListener("click", async () => {
   }
 });
 
-// Llamar a la función principal para inicializar el mapa y cargar la información
-initialize_map();
+// Función para actualizar la base de datos (ejemplo, reemplazar con tu lógica)
+async function updateDatabase() {
+  // Aquí va tu lógica para actualizar la base de datos
+  console.log("Actualizando base de datos...");
+}
+
