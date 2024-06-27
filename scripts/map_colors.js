@@ -148,6 +148,7 @@ async function initialize_map() {
   }).addTo(map);
 
   let userCoords;
+  let circle;
 
   try {
     userCoords = await get_user_location();
@@ -163,53 +164,16 @@ async function initialize_map() {
 
     map.flyTo(userCoords, 17);
 
-    const buttonsList = await load_buttons_list();
-    const crimesList = await load_crimes_list();
-
     const distanceSelect = document.getElementById("distance-select");
     let distance = parseFloat(distanceSelect.value);
 
-    let filteredButtons = filter_buttons_by_location(
-      buttonsList,
-      userCoords,
-      distance
-    );
-    let filteredCrimes = filter_crimes_by_location(
-      crimesList,
-      userCoords,
-      distance
-    );
-
-    updateMapElements(
-      map,
-      userCoords,
-      filteredButtons,
-      filteredCrimes,
-      distance
-    );
-
     distanceSelect.addEventListener("change", async () => {
       distance = parseFloat(distanceSelect.value);
-
-      filteredButtons = filter_buttons_by_location(
-        buttonsList,
-        userCoords,
-        distance
-      );
-      filteredCrimes = filter_crimes_by_location(
-        crimesList,
-        userCoords,
-        distance
-      );
-
-      updateMapElements(
-        map,
-        userCoords,
-        filteredButtons,
-        filteredCrimes,
-        distance
-      );
+      updateMapElements(map, userCoords, distance);
     });
+
+    await updateMapElements(map, userCoords, distance);
+
   } catch (error) {
     console.error("Error obteniendo la ubicación del usuario:", error);
     Swal.fire({
@@ -220,8 +184,36 @@ async function initialize_map() {
   }
 }
 
-function updateMapElements(map, userCoords, buttonsList, crimesList, distance) {
-  let buttonMarkers = buttonsList.map((button) => {
+async function updateMapElements(map, userCoords, distance) {
+  let buttonsList, crimesList;
+
+  try {
+    buttonsList = await load_buttons_list();
+    crimesList = await load_crimes_list();
+  } catch (error) {
+    console.error("Error al cargar los datos:", error);
+    Swal.fire({
+      icon: "error",
+      title: "Error de carga de datos",
+      text: "Hubo un problema al cargar los datos de los botones y crímenes.",
+    });
+    return;
+  }
+
+  const filteredButtons = filter_buttons_by_location(buttonsList, userCoords, distance);
+  const filteredCrimes = filter_crimes_by_location(crimesList, userCoords, distance);
+
+  let buttonMarkers = [];
+  let crimeMarkers = [];
+
+  // Limpiar marcadores existentes
+  map.eachLayer((layer) => {
+    if (layer instanceof L.Marker) {
+      map.removeLayer(layer);
+    }
+  });
+
+  buttonMarkers = filteredButtons.map((button) => {
     const { latitud_boton, longitud_boton } = button;
     return L.marker([latitud_boton, longitud_boton], {
       icon: L.icon({
@@ -238,7 +230,7 @@ function updateMapElements(map, userCoords, buttonsList, crimesList, distance) {
       .bindPopup("Botón de Pánico CDMX C5");
   });
 
-  let crimeMarkers = crimesList.map((crime) => {
+  crimeMarkers = filteredCrimes.map((crime) => {
     const { latitud_delito, longitud_delito } = crime;
     return L.marker([latitud_delito, longitud_delito])
       .addTo(map)
@@ -246,7 +238,6 @@ function updateMapElements(map, userCoords, buttonsList, crimesList, distance) {
   });
 
   let circleColor = "#ff0000"; // Color por defecto
-  let circleRadius = 1000; // Radio en metros por defecto
 
   // Factor de multiplicación basado en la distancia
   let factor = 1;
@@ -258,7 +249,7 @@ function updateMapElements(map, userCoords, buttonsList, crimesList, distance) {
     factor = 4; // Multiplicar por 4 si la distancia es <= 1 kilómetro
   }
 
-  const numCrimes = crimesList.length * factor;
+  const numCrimes = filteredCrimes.length * factor;
 
   // Definir los valores estáticos dinámicamente
   let safeThreshold = 25 * factor;
@@ -293,12 +284,7 @@ function updateMapElements(map, userCoords, buttonsList, crimesList, distance) {
   map.setView(userCoords, map.getZoom());
 }
 
-
-async function getInfoApi() {
-  // Aquí iría el código para obtener la información desde tu API y actualizar la base de datos
-  console.log("Obteniendo información desde la API...");
-}
-
+// Funciones de alerta
 function safe_alert() {
   Swal.fire({
     icon: "success",
