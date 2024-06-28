@@ -3,6 +3,8 @@ const url_DB_buttons =
 const url_DB_crimes =
   "https://proyecto-ipn-default-rtdb.firebaseio.com/Crimes.json";
 
+  let currentDangerLevel = null; // Variable para rastrear el nivel de peligro actual
+
   function isWithinCDMX(latitude, longitude) {
     const CDMX_BOUNDS = {
       north: 19.5928,
@@ -257,15 +259,28 @@ const url_DB_crimes =
     let safeThreshold = 25 * factor;
     let mediumThreshold = 55 * factor;
   
+    let newDangerLevel;
     if (numCrimes < safeThreshold) {
       circleColor = "#00ff00";
-      safe_alert(); // Verde para zonas seguras
+      newDangerLevel = "safe"; // Verde para zonas seguras
     } else if (numCrimes >= safeThreshold && numCrimes <= mediumThreshold) {
       circleColor = "#ffff00";
-      warning_alert(); // Amarillo para zonas de riesgo medio
+      newDangerLevel = "medium"; // Amarillo para zonas de riesgo medio
     } else {
       circleColor = "#ff0000";
-      danger_alert(); // Rojo para zonas de alto riesgo
+      newDangerLevel = "danger"; // Rojo para zonas de alto riesgo
+    }
+  
+    // Mostrar la alerta solo si el nivel de peligro cambia
+    if (currentDangerLevel !== newDangerLevel) {
+      currentDangerLevel = newDangerLevel;
+      if (newDangerLevel === "safe") {
+        safe_alert();
+      } else if (newDangerLevel === "medium") {
+        warning_alert();
+      } else if (newDangerLevel === "danger") {
+        danger_alert();
+      }
     }
   
     // Eliminar círculo anterior si existe
