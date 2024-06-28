@@ -51,19 +51,20 @@
         </nav>
     </header>
     <main>
-        <label for="distance-select">Selecciona la distancia:</label>
-        <select id="distance-select">
-            <option value="0.001">100 metros</option>
-            <option value="0.0025">250 metros</option>
-            <option value="0.005">500 metros</option>
-            <option value="0.01">1 kilómetro</option>
-        </select>
+        <div class="d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center">
+                <label for="distance-select" class="me-2">Selecciona la distancia:</label>
+                <select id="distance-select" class="form-select">
+                    <option value="0.001">100 metros</option>
+                    <option value="0.0025">250 metros</option>
+                    <option value="0.005">500 metros</option>
+                    <option value="0.01">1 kilómetro</option>
+                </select>
+            </div>
+            <p class="mb-0 ms-3">La base de datos está actualizada al 13 de mayo de 2024, 13:16 (UTC-06:00), con datos de la Fiscalía General de Justicia de la Ciudad de México.</p>
+        </div>
         <div id="map"></div>
     </main>
-    <footer class="text-center mt-1">
-        <p>La base de datos está actualizada al 13 de mayo de 2024, 13:16 (UTC-06:00), con datos de la Fiscalía General
-            de Justicia de la Ciudad de México.</p>
-    </footer>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>

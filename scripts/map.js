@@ -241,11 +241,12 @@ document
     // Mostrar alerta de espera
     const swalLoading = swal({
       title: "Actualizando base de datos...",
-      text: "Esto puede tardar unos momentos. Puedes salir de esta ventana dando click afuera del recuadro, la base de datos aun asi se actualizara",
+      text: "Esto puede tardar unos momentos. Puedes salir de esta ventana, la base de datos aun asi se actualizara",
       icon: "info",
-      buttons: false,
       closeOnClickOutside: true,
       closeOnEsc: false,
+      showCancelButton: true, // Añadir botón de cierre
+      cancelButtonText: "Cerrar",
     });
 
     try {
@@ -256,6 +257,8 @@ document
         icon: "success",
         title: "Base de datos actualizada",
         text: "La base de datos se ha actualizado correctamente.",
+        showCancelButton: true, // Añadir botón de cierre
+        cancelButtonText: "Cerrar",
       });
     } catch (error) {
       swalLoading.close();
@@ -263,6 +266,8 @@ document
         icon: "error",
         title: "Error al actualizar",
         text: "Hubo un problema al actualizar la base de datos.",
+        showCancelButton: true, // Añadir botón de cierre
+        cancelButtonText: "Cerrar",
       });
     }
   });
