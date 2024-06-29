@@ -303,27 +303,62 @@ const url_DB_crimes =
   }
   
   // Funciones de alerta
+  function danger_alert() {
+    swal({
+      icon: "error",
+      title: "Cuidado, estás en una zona con un índice alto de robos",
+      content: {
+        element: "div",
+        attributes: {
+          innerHTML: `
+              <p>Si notas conductas fuera de lugar, tal como personas que te están siguiendo o que intentan acercarse a ti inesperadamente, trata de incorporarte a un lugar concurrido o cambiar tu trayectoria</p>
+              <ul>
+                <li>Evita uso de tu teléfono o audífonos</li>
+                <li>Evita tener a la vista objetos de valor</li>
+                <li>Evita sitios oscuros y solitarios</li>
+              </ul>
+            `,
+        },
+      },
+    });
+  }
+  
   function safe_alert() {
-    Swal.fire({
+    swal({
       icon: "success",
-      title: "Zona Segura",
-      text: "Estás en una zona segura.",
+      title: "Estás en una zona con un índice bajo de robos",
+      content: {
+        element: "div",
+        attributes: {
+          innerHTML: `
+              <ul>
+                <li>Evita uso de tu teléfono o audífonos</li>
+                <li>Evita tener a la vista objetos de valor</li>
+                <li>Evita sitios oscuros y solitarios</li>
+              </ul>
+            `,
+        },
+      },
     });
   }
   
   function warning_alert() {
-    Swal.fire({
+    swal({
       icon: "warning",
-      title: "Zona de Riesgo Medio",
-      text: "Estás en una zona de riesgo medio.",
-    });
-  }
-  
-  function danger_alert() {
-    Swal.fire({
-      icon: "error",
-      title: "Zona de Alto Riesgo",
-      text: "Estás en una zona de alto riesgo.",
+      title: "Estás en una zona con un índice medio de robos",
+      content: {
+        element: "div",
+        attributes: {
+          innerHTML: `
+              <p>Si notas conductas fuera de lugar, tal como personas que te están siguiendo o que intentan acercarse a ti inesperadamente, trata de incorporarte a un lugar concurrido o cambiar tu trayectoria</p>
+              <ul>
+                <li>Evita uso de tu teléfono o audífonos</li>
+                <li>Evita tener a la vista objetos de valor</li>
+                <li>Evita sitios oscuros y solitarios</li>
+              </ul>
+            `,
+        },
+      },
     });
   }
   
